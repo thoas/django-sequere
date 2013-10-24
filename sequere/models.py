@@ -27,8 +27,10 @@ class Follow(models.Model):
     objects = FollowManager()
 
     def __str__(self):
-        return '<%s: %d>' % (self.identifier,
-                             self.object_id)
+        return '[%s: %d] -> [%s: %d]' % (self.from_identifier,
+                                         self.from_object_id,
+                                         self.to_identifier,
+                                         self.to_object_id)
 
 
 def follow(from_instance, to_instance):
@@ -45,6 +47,14 @@ def unfollow(from_instance, to_instance):
 
 def get_followings(instance):
     return get_backend()().get_followings(instance)
+
+
+def get_followings_count(instance):
+    return get_backend()().get_followings_count(instance)
+
+
+def get_followers_count(instance):
+    return get_backend()().get_followers_count(instance)
 
 
 def get_followers(instance):
