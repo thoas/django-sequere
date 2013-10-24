@@ -1,4 +1,4 @@
-from .base import SequereModelBase
+from .base import ModelBase
 
 
 class SequereRegistry(dict):
@@ -50,9 +50,11 @@ class SequereRegistry(dict):
             name = '%sSequere' % model.__name__
 
         if sequere is None:
-            base = SequereModelBase
+            base = ModelBase
         else:
             base = sequere
+
+        kwargs['model'] = model
 
         sequere = type(name, (base,), kwargs)
 

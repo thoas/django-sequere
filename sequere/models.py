@@ -32,20 +32,20 @@ class Follow(models.Model):
 
 
 def follow(from_instance, to_instance):
-    return get_backend().follow(from_instance, to_instance)
+    return get_backend()().follow(from_instance, to_instance)
 
 
 def is_following(from_instance, to_instance):
-    return get_backend().is_following(from_instance, to_instance)
+    return get_backend()().is_following(from_instance, to_instance)
 
 
 def unfollow(from_instance, to_instance):
-    return get_backend().unfollow(from_instance, to_instance)
+    return get_backend()().unfollow(from_instance, to_instance)
 
 
 def get_followings(instance):
-    return get_backend().get_followings(instance)
+    return get_backend()().get_followings(instance)
 
 
 def get_followers(instance):
-    return get_backend().get_followers(instance)
+    return get_backend()().get_followers(instance)
