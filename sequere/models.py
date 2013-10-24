@@ -2,6 +2,8 @@ from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.db.models.query import QuerySet
 
+from .backends import get_backend
+
 
 class FollowQuerySet(QuerySet):
     pass
@@ -30,20 +32,20 @@ class Follow(models.Model):
 
 
 def follow(from_instance, to_instance):
-    pass
+    return get_backend().follow(from_instance, to_instance)
 
 
 def is_following(from_instance, to_instance):
-    pass
+    return get_backend().is_following(from_instance, to_instance)
 
 
 def unfollow(from_instance, to_instance):
-    pass
+    return get_backend().unfollow(from_instance, to_instance)
 
 
 def get_followings(instance):
-    pass
+    return get_backend().get_followings(instance)
 
 
 def get_followers(instance):
-    pass
+    return get_backend().get_followers(instance)
