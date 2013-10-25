@@ -13,6 +13,9 @@ class SequereRegistry(dict):
         except KeyError:
             return
 
+    def get_identifier(self, instance):
+        return {v: k for k, v in self.identifiers.items()}.get(instance.__class__)
+
     @cached_property
     def identifiers(self):
         return {v().get_identifier(): k for k, v in self._models.items()}

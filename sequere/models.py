@@ -4,14 +4,32 @@ from django.db.models.query import QuerySet
 
 from .backends import get_backend
 
+from .registry import registry
+
 
 class FollowQuerySet(QuerySet):
-    pass
+    def from_instance(self, instance):
+        from_identifier = registry.get_identifier(instance)
+
+        return self.filter(from_identifier=from_identifier,
+                           from_object_id=instance.pk)
+
+    def to_instance(self, instance):
+        to_identifier = registry.get_identifier(instance)
+
+        return self.filter(to_identifier=to_identifier,
+                           to_object_id=instance.pk)
 
 
 class FollowManager(models.Manager):
     def get_query_set(self):
         return FollowQuerySet(self.model)
+
+    def from_instance(self, instance):
+        return self.get_query_set().from_instance(instance)
+
+    def to_instance(self, instance):
+        return self.get_query_set().to_instance(instance)
 
 
 @python_2_unicode_compatible

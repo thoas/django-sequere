@@ -15,7 +15,7 @@ class SimpleBackend(BaseBackend):
         params = {}
 
         if from_instance:
-            from_identifier = self.get_identifier(from_instance)
+            from_identifier = registry.get_identifier(from_instance)
 
             params.update({
                 'from_identifier': from_identifier,
@@ -23,7 +23,7 @@ class SimpleBackend(BaseBackend):
             })
 
         if to_instance:
-            to_identifier = self.get_identifier(to_instance)
+            to_identifier = registry.get_identifier(to_instance)
 
             params.update({
                 'to_identifier': to_identifier,
@@ -39,8 +39,7 @@ class SimpleBackend(BaseBackend):
         return new
 
     def unfollow(self, from_instance, to_instance):
-        return self.model.objects.filter(**self._params(from_instance=from_instance,
-                                                        to_instance=to_instance)).delete()
+        return self.model.objects.from_instance(from_instance).to_instance(to_instance).delete()
 
     def get_followers(self, instance, desc=True):
         return self._results(self.get_followers_count(instance),
@@ -54,10 +53,15 @@ class SimpleBackend(BaseBackend):
         order = '-created_at' if desc else 'created_at'
 
         for i in range(0, count, self.chunks_length):
-            values = (self.model.objects.filter(**self._params(**{filter_key: instance}))
-                      .order_by(order)[i:i + self.chunks_length].values(identifier_key,
-                                                                        object_id_key,
-                                                                        'created_at'))
+            qs = self.model.objects
+
+            method = getattr(qs, filter_key)
+
+            qs = method(instance)
+
+            values = (qs.order_by(order)[i:i + self.chunks_length].values(identifier_key,
+                                                                          object_id_key,
+                                                                          'created_at'))
 
             identifier_ids = defaultdict(list)
 
@@ -90,13 +94,10 @@ class SimpleBackend(BaseBackend):
                              desc=desc)
 
     def is_following(self, from_instance, to_instance):
-        return self.model.objects.filter(**self._params(from_instance=from_instance,
-                                                        to_instance=to_instance)).exists()
+        return self.model.objects.from_instance(from_instance).to_instance(to_instance).exists()
 
     def get_followings_count(self, instance):
-        return self.model.objects.filter(from_identifier=self.get_identifier(instance),
-                                         from_object_id=instance.pk).count()
+        return self.model.objects.from_instance(instance).count()
 
     def get_followers_count(self, instance):
-        return self.model.objects.filter(to_identifier=self.get_identifier(instance),
-                                         to_object_id=instance.pk).count()
+        return self.model.objects.to_instance(instance).count()
