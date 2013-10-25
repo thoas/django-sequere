@@ -1,5 +1,3 @@
-from django.utils.functional import cached_property
-
 from .base import ModelBase
 
 
@@ -16,7 +14,7 @@ class SequereRegistry(dict):
     def get_identifier(self, instance):
         return dict((v, k) for k, v in self.identifiers.items()).get(instance.__class__)
 
-    @cached_property
+    @property
     def identifiers(self):
         return dict((v().get_identifier(), k) for k, v in self._models.items())
 

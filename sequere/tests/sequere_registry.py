@@ -3,12 +3,12 @@ from .models import Project
 from ..compat import User
 from ..base import ModelBase
 
-from sequere import registry
+import sequere
 
 
 class ProjectSequere(ModelBase):
     identifier = 'projet'
 
 
-registry.register(User)
-registry.register(Project, ProjectSequere)
+sequere.register(User)
+sequere.register(Project, ProjectSequere)
