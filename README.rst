@@ -11,7 +11,7 @@ Installation
        pip install django-sequere
 
 
-2. Add 'rq_mail' to your ``INSTALLED_APPS`` ::
+2. Add 'sequere' to your ``INSTALLED_APPS`` ::
 
        INSTALLED_APPS = (
            'sequere',
