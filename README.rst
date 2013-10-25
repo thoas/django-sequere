@@ -99,6 +99,41 @@ You can now use Sequere like any other application, let's play with it ::
     [(<Project: La classe americaine, datetime.datetime(2013, 10, 25, 4, 41, 31, 612067))]
 
 
+Backends
+--------
+
+sequere.backends.simple.SimpleBackend
+.....................................
+
+A simple backend to store your follows in you favorite database using the Django's
+ORM.
+
+The follower will be identified by a couple (from_identifier, from_object_id)
+and the following will be identified by the couple (to_identifier, to_object_id).
+
+Each identifiers are taken from the registry. For example, if you want to create
+a custom identifier key from a model you can customized it like so: ::
+
+    # sequere_registry.py
+
+    from myapp.models import Project
+
+    from sequere.base import ModelBase
+
+    import sequere
+
+
+    class ProjectSequere(ModelBase):
+        identifier = 'projet' # the french way ;)
+
+    sequere.registry(Project, ProjectSequere)
+
+
+sequere.backends.redis.RedisBackend
+...................................
+
+coming soon
+
 
 Configuration
 -------------
