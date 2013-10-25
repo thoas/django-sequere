@@ -1,3 +1,5 @@
+from django.utils.functional import cached_property
+
 from .base import ModelBase
 
 
@@ -10,6 +12,10 @@ class SequereRegistry(dict):
             return self._models[model]
         except KeyError:
             return
+
+    @cached_property
+    def identifiers(self):
+        return {v().get_identifier(): k for k, v in self._models.items()}
 
     def unregister(self, name):
         del self[name]

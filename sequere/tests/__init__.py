@@ -56,6 +56,8 @@ class FollowTests(Exam, TestCase):
 
         self.assertEqual(len(followers), 1)
 
+        self.assertIn(self.user, dict(followers))
+
     def test_followings(self):
         from ..models import follow, get_followings
 
@@ -64,3 +66,5 @@ class FollowTests(Exam, TestCase):
         followings = list(itertools.chain(*[followers for followers in get_followings(self.user)]))
 
         self.assertEqual(len(followings), 1)
+
+        self.assertIn(self.project, dict(followings))
