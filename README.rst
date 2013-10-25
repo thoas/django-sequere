@@ -47,10 +47,10 @@ another one. ::
 
     from .models import Project, User
 
-    import sequere
+    from sequere import registry
 
-    sequere.register(User)
-    sequere.register(Project)
+    registry.register(User)
+    registry.register(Project)
 
 
 Sequere uses the same concepts as `Django Admin`_, so if you have already used it,
@@ -170,13 +170,13 @@ a custom identifier key from a model you can customized it like so: ::
 
     from sequere.base import ModelBase
 
-    import sequere
+    from sequere import registry
 
 
     class ProjectSequere(ModelBase):
         identifier = 'projet' # the french way ;)
 
-    sequere.registry(Project, ProjectSequere)
+    registry.register(Project, ProjectSequere)
 
 
 sequere.backends.redis.RedisBackend
