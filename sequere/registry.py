@@ -14,11 +14,11 @@ class SequereRegistry(dict):
             return
 
     def get_identifier(self, instance):
-        return {v: k for k, v in self.identifiers.items()}.get(instance.__class__)
+        return dict((v, k) for k, v in self.identifiers.items()).get(instance.__class__)
 
     @cached_property
     def identifiers(self):
-        return {v().get_identifier(): k for k, v in self._models.items()}
+        return dict((v().get_identifier(), k) for k, v in self._models.items())
 
     def unregister(self, name):
         del self[name]

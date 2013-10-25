@@ -1,6 +1,10 @@
 django-sequere
 ==============
 
+.. image:: https://secure.travis-ci.org/thoas/django-sequere.png?branch=master
+    :alt: Build Status
+    :target: http://travis-ci.org/thoas/django-sequere
+
 A generic application to follow a resource with multiple backends (db, redis, etc.)
 
 Installation
