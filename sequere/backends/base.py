@@ -1,6 +1,3 @@
-from ..registry import registry
-
-
 class BaseBackend(object):
     def follow(self, from_instance, to_instance):
         raise NotImplemented
@@ -22,8 +19,3 @@ class BaseBackend(object):
 
     def get_followers_count(self, instance):
         raise NotImplemented
-
-    def get_identifier(self, instance):
-        klass = registry.sequere_for_model(instance.__class__)
-
-        return klass().get_identifier()
