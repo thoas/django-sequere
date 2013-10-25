@@ -95,7 +95,7 @@ You can now use Sequere like any other application, let's play with it ::
     In [9]: get_followers(project)
     [(<User: thoas>, datetime.datetime(2013, 10, 25, 4, 41, 31, 612067))]
 
-    In [9]: get_followings(user)
+    In [10]: get_followings(user)
     [(<Project: La classe americaine, datetime.datetime(2013, 10, 25, 4, 41, 31, 612067))]
 
 
