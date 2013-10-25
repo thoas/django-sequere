@@ -92,11 +92,57 @@ You can now use Sequere like any other application, let's play with it ::
     In [9]: get_followers(user)
     []
 
-    In [9]: get_followers(project)
+    In [10]: get_followers(project)
     [(<User: thoas>, datetime.datetime(2013, 10, 25, 4, 41, 31, 612067))]
 
-    In [10]: get_followings(user)
+    In [11]: get_followings(user)
     [(<Project: La classe americaine, datetime.datetime(2013, 10, 25, 4, 41, 31, 612067))]
+
+
+If you are as lazy as me to provide the original instance in each sequere calls, use ``SequereMixin``::
+
+    # models.py
+
+    from django.db import models
+
+    from sequere.mixin import SequereMixin
+
+    class User(SequereMixin, models.Model):
+        username = models.Charfield(max_length=150)
+
+    class Project(SequereMixin, models.Model):
+        name = models.Charfield(max_length=150)
+
+Now you can use calls directly from the instance: ::
+
+    In [1]: from myapp.models import User, Project
+
+    In [2]: user = User.objects.create(username='thoas')
+
+    In [3]: project = Project.objects.create(name'La classe americaine')
+
+    In [4]: user.follow(project)  # thoas will now follow "La classe americaine"
+
+    In [5]: user.is_following(project)
+    True
+
+    In [6]: project.get_followers_count()
+    1
+
+    In [7]: user.get_followings_count()
+    1
+
+    In [8]: user.get_followers()
+    []
+
+    In [9]: project.get_followers()
+    [(<User: thoas>, datetime.datetime(2013, 10, 25, 4, 41, 31, 612067))]
+
+    In [10]: user.get_followings()
+    [(<Project: La classe americaine, datetime.datetime(2013, 10, 25, 4, 41, 31, 612067))]
+
+
+So much fun!
 
 
 Backends
