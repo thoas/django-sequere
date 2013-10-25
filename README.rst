@@ -182,7 +182,42 @@ a custom identifier key from a model you can customized it like so: ::
 sequere.backends.redis.RedisBackend
 ...................................
 
-coming soon
+We are using exclusively `Sorted Sets`_ in this Redis implementation.
+
+Create a uid for a new resource ::
+
+    INCR sequere:global:uid    =>  1
+    SET sequere:uid:{identifier}:{id} 1
+
+Store followers count ::
+
+    INCR sequere:uid:{uid}:followers:count => 1
+
+Store followings count ::
+
+    INCR sequere:uid:{uid}:followings:count => 1
+
+
+Add a new follower ::
+
+    ZADD sequere:uid:{uid}:followers {uid} {timestamp}
+
+Add a new following ::
+
+    ZADD sequere:uid:{uid}:followings {uid} {timestamp}
+
+
+Retrieve the followers uids ::
+
+    ZRANGE sequere:uid:{uid}:followers 0 -1
+
+Retrieve the followings uids ::
+
+    ZRANGE sequere:uid:{uid}:followings 0 -1
+
+With this implementation you can retrieve your followers ordered ::
+
+    ZREVRANGE sequere:uid:{uid}:followers 0 -1
 
 
 Configuration
@@ -194,5 +229,17 @@ Configuration
 The backend used to store follows
 
 
+Resources
+---------
+
+`haplocheirus`_: a Redis backed storage engine for timelines written in Scala
+`Case study from Redis documentation`_: write a twitter clone
+`Amico`_: relationships backed by Redis
+
+
 .. _GitHub: https://github.com/thoas/django-sequere
 .. _Django Admin: https://docs.djangoproject.com/en/dev/ref/contrib/admin/
+.. _Sorted Sets: http://redis.io/commands#sorted_set
+.. _haplocheirus: https://github.com/twitter/haplocheirus
+.. _Case study from Redis documentation: http://redis.io/topics/twitter-clone
+.. _Amico: https://github.com/agoragames/amico
