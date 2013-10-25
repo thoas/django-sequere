@@ -26,6 +26,9 @@ class Follow(models.Model):
 
     objects = FollowManager()
 
+    class Meta:
+        ordering = ['-created_at', ]
+
     def __str__(self):
         return '[%s: %d] -> [%s: %d]' % (self.from_identifier,
                                          self.from_object_id,
