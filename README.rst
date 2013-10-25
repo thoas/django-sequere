@@ -232,9 +232,9 @@ The backend used to store follows
 Resources
 ---------
 
-`haplocheirus`_: a Redis backed storage engine for timelines written in Scala
-`Case study from Redis documentation`_: write a twitter clone
-`Amico`_: relationships backed by Redis
+- `haplocheirus`_: a Redis backed storage engine for timelines written in Scala
+- `Case study from Redis documentation`_: write a twitter clone
+- `Amico`_: relationships backed by Redis
 
 
 .. _GitHub: https://github.com/thoas/django-sequere
