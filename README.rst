@@ -56,7 +56,7 @@ another one. ::
 Sequere uses the same concepts as `Django Admin`_, so if you have already used it,
 you will not be lost.
 
-Last step is to tell Sequere to autodiscover your registered models ::
+Last step is to tell Sequere to autodiscover your registered models: ::
 
     # urls.py
 
@@ -71,7 +71,7 @@ Last step is to tell Sequere to autodiscover your registered models ::
     )
 
 
-You can now use Sequere like any other application, let's play with it ::
+You can now use Sequere like any other application, let's play with it: ::
 
     In [1]: from sequere.models import (follow, unfollow, get_followings_count, is_following,
                                         get_followers_count, get_followers, get_followings)
@@ -158,8 +158,8 @@ sequere.backends.simple.SimpleBackend
 A simple backend to store your follows in you favorite database using the Django's
 ORM.
 
-The follower will be identified by a couple (from_identifier, from_object_id)
-and the following will be identified by the couple (to_identifier, to_object_id).
+The follower will be identified by the couple (from_identifier, from_object_id)
+and the following by (to_identifier, to_object_id).
 
 Each identifiers are taken from the registry. For example, if you want to create
 a custom identifier key from a model you can customized it like so: ::
