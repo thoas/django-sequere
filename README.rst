@@ -188,7 +188,7 @@ Create a uid for a new resource ::
 
     INCR sequere:global:uid    =>  1
     SET sequere:uid:{identifier}:{id} 1
-    SET sequere:uid::{id} {'identifier': {identifier}, 'object_id': {id}}
+    HMSET sequere:uid::{id} identifier {identifier} object_id {id}
 
 Store followers count ::
 
