@@ -11,8 +11,8 @@ class SequereMixin(object):
     def unfollow(self, instance):
         return sequere.unfollow(self, instance)
 
-    def get_followings(self):
-        return sequere.get_followings(self)
+    def get_followings(self, desc=True, chunks_length=None):
+        return sequere.get_followings(self, desc=desc, chunks_length=chunks_length)
 
     def get_followings_count(self):
         return sequere.get_followings_count(self)
@@ -20,5 +20,5 @@ class SequereMixin(object):
     def get_followers_count(self):
         return sequere.get_followers_count(self)
 
-    def get_followers(self):
-        return sequere.get_followers(self)
+    def get_followers(self, desc=True, chunks_length=None):
+        return sequere.get_followers(self, desc=desc, chunks_length=chunks_length)

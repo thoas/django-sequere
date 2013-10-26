@@ -66,7 +66,7 @@ def unfollow(from_instance, to_instance):
     return get_backend()().unfollow(from_instance, to_instance)
 
 
-def get_followings(instance):
+def get_followings(instance, desc=True, chunks_length=None):
     return get_backend()().get_followings(instance)
 
 
@@ -78,5 +78,5 @@ def get_followers_count(instance):
     return get_backend()().get_followers_count(instance)
 
 
-def get_followers(instance):
+def get_followers(instance, desc=True, chunks_length=None):
     return get_backend()().get_followers(instance)
