@@ -188,6 +188,7 @@ Create a uid for a new resource ::
 
     INCR sequere:global:uid    =>  1
     SET sequere:uid:{identifier}:{id} 1
+    SET sequere:uid::{id} {'identifier': {identifier}, 'object_id': {id}}
 
 Store followers count ::
 
@@ -209,15 +210,15 @@ Add a new following ::
 
 Retrieve the followers uids ::
 
-    ZRANGE sequere:uid:{uid}:followers 0 -1
+    ZRANGEBYSCORE sequere:uid:{uid}:followers -inf +inf
 
 Retrieve the followings uids ::
 
-    ZRANGE sequere:uid:{uid}:followings 0 -1
+    ZRANGEBYSCORE sequere:uid:{uid}:followings =inf +inf
 
 With this implementation you can retrieve your followers ordered ::
 
-    ZREVRANGE sequere:uid:{uid}:followers 0 -1
+    ZREVRANGEBYSCORE sequere:uid:{uid}:followers +inf -inf
 
 
 Configuration
