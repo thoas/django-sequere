@@ -1,6 +1,10 @@
 #-*- coding: utf-8 -*-
+from datetime import datetime
+
 from django.core import exceptions
 from django.utils.importlib import import_module
+from django.conf import settings
+from django.utils import timezone
 
 
 CLASS_PATH_ERROR = 'django-sequere is unable to interpret settings value for %s. '\
@@ -60,3 +64,16 @@ def load_class(class_path, setting_name=None):
                 class_module, class_name)
         raise exceptions.ImproperlyConfigured(txt)
     return clazz
+
+
+def fromtimestamp(timestamp):
+    if settings.USE_TZ:
+        import pytz
+
+        local_tz = timezone.get_default_timezone()
+
+        utc_dt = datetime.utcfromtimestamp(timestamp).replace(tzinfo=pytz.utc)
+
+        return local_tz.normalize(utc_dt.astimezone(local_tz))
+
+    return datetime.fromtimestamp(timestamp)
