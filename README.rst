@@ -269,9 +269,9 @@ Alternatively you can use a URL to do the same: ::
 ``SEQUERE_REDIS_CONNECTION_CLASS``
 ..................................
 
-An (optional) dotted import path to a connection to use, e.g.:
+An (optional) dotted import path to a connection to use, e.g.: ::
 
-SEQUERE_REDIS_CONNECTION_CLASS = 'myproject.myapp.mockup.Connection'
+    SEQUERE_REDIS_CONNECTION_CLASS = 'myproject.myapp.mockup.Connection'
 
 ``SEQUERE_REDIS_PREFIX``
 ........................
