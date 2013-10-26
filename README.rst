@@ -229,6 +229,36 @@ Configuration
 
 The backend used to store follows
 
+``SEQUERE_REDIS_CONNECTION``
+............................
+
+A dictionary of parameters to pass to the to Redis client, e.g.: ::
+
+    SEQUERE_REDIS_CONNECTION = {
+        'host': 'localhost',
+        'port': 6379,
+        'db': 0,
+    }
+
+Alternatively you can use a URL to do the same: ::
+
+    SEQUERE_REDIS_CONNECTION = 'redis://username:password@localhost:6379/0'
+
+
+``SEQUERE_REDIS_CONNECTION_CLASS``
+..................................
+
+An (optional) dotted import path to a connection to use, e.g.:
+
+SEQUERE_REDIS_CONNECTION_CLASS = 'myproject.myapp.mockup.Connection'
+
+``SEQUERE_REDIS_PREFIX``
+........................
+
+The (optional) prefix to be used for the key when storing in the Redis database. Defaults to 'sequere:'. E.g.: ::
+
+    SEQUERE_REDIS_PREFIX = 'sequere:myproject:'
+
 
 Resources
 ---------
