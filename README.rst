@@ -220,6 +220,14 @@ With this implementation you can retrieve your followers ordered ::
 
     ZREVRANGEBYSCORE sequere:uid:{uid}:followers +inf -inf
 
+sequere.backends.redis.RedisFallbackBackend
+...........................................
+
+If you want to store follows in Redis and in your database with asynchronous tasks,
+this backend is for you.
+
+To run asynchronous tasks, we are using `Celery`_ tasks.
+
 
 Configuration
 -------------
@@ -274,3 +282,4 @@ Resources
 .. _haplocheirus: https://github.com/twitter/haplocheirus
 .. _Case study from Redis documentation: http://redis.io/topics/twitter-clone
 .. _Amico: https://github.com/agoragames/amico
+.. _Celery: http://www.celeryproject.org/
