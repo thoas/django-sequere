@@ -92,7 +92,7 @@ class RedisBackend(BaseBackend):
 
             pipe.execute()
 
-    def retrieve_instances(self, key, count, desc=True):
+    def retrieve_instances(self, key, count, desc, chunks_length):
         pieces = [key, ]
 
         if desc:
@@ -104,8 +104,8 @@ class RedisBackend(BaseBackend):
 
             pieces += ['-inf', '+inf']
 
-        for i in range(0, count, self.chunks_length):
-            scores = method(*pieces, start=i, num=self.chunks_length, withscores=True)
+        for i in range(0, count, chunks_length):
+            scores = method(*pieces, start=i, num=chunks_length, withscores=True)
 
             with self.client.pipeline() as pipe:
                 for uid, score in scores:
@@ -133,15 +133,17 @@ class RedisBackend(BaseBackend):
 
                 yield sorted(orders.items(), key=itemgetter(1), reverse=desc)
 
-    def get_followers(self, instance, desc=True):
+    def get_followers(self, instance, desc=True, chunks_length=None):
         return self.retrieve_instances(self.add_prefix('uid:%s:followers' % self.get_uid(instance)),
                                        self.get_followers_count(instance),
-                                       desc=desc)
+                                       desc=desc,
+                                       chunks_length=chunks_length or self.chunks_length)
 
-    def get_followings(self, instance, desc=True):
+    def get_followings(self, instance, desc=True, chunks_length=None):
         return self.retrieve_instances(self.add_prefix('uid:%s:followings' % self.get_uid(instance)),
                                        self.get_followings_count(instance),
-                                       desc=desc)
+                                       desc=desc,
+                                       chunks_length=chunks_length or self.chunks_length)
 
     def is_following(self, from_instance, to_instance):
         from_uid = self.get_uid(from_instance)
@@ -150,18 +152,28 @@ class RedisBackend(BaseBackend):
 
         return self.client.zrank(self.add_prefix('uid:%s:followings' % from_uid), '%s' % to_uid) is not None
 
+    def _get_followings_count(self, instance):
+        return self.client.get(self.add_prefix('uid:%s:followings:count' % self.get_uid(instance)))
+
     def get_followings_count(self, instance):
-        result = self.client.get(self.add_prefix('uid:%s:followings:count' % self.get_uid(instance)))
+        result = self._get_followings_count(instance)
 
         if result:
             return int(result)
 
         return 0
+
+    def _get_followers_count(self, instance):
+        return self.client.get(self.add_prefix('uid:%s:followers:count' % self.get_uid(instance)))
 
     def get_followers_count(self, instance):
-        result = self.client.get(self.add_prefix('uid:%s:followers:count' % self.get_uid(instance)))
+        result = self._get_followers_count(instance)
 
         if result:
             return int(result)
 
         return 0
+
+
+class RedisFallbackBackend(RedisBackend):
+    pass
