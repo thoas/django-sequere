@@ -105,7 +105,7 @@ class RedisBackend(BaseBackend):
             pieces += ['-inf', '+inf']
 
         for i in range(0, count, self.chunks_length):
-            scores = method(*pieces, withscores=True)
+            scores = method(*pieces, start=i, num=self.chunks_length, withscores=True)
 
             with self.client.pipeline() as pipe:
                 for uid, score in scores:
