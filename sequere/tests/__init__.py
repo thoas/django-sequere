@@ -122,3 +122,15 @@ class FollowRedisTests(BaseBackendTests, TestCase):
         from sequere.backends import get_backend
 
         get_backend()().client.flushdb()
+
+
+@override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.redis.RedisFallbackBackend')
+class FollowRedisFallbackTests(BaseBackendTests, TestCase):
+    def setUp(self):
+        super(FollowRedisFallbackTests, self).setUp()
+
+        reload(settings)
+
+        from sequere.backends import get_backend
+
+        get_backend()().client.flushdb()

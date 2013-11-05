@@ -25,3 +25,5 @@ INSTALLED_APPS = [
 SECRET_KEY = 'blabla'
 
 ROOT_URLCONF = 'sequere.tests.urls'
+
+TEST_RUNNER = 'sequere.tests.runner.DjangoTestSuiteRunner'

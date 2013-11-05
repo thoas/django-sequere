@@ -20,10 +20,11 @@ class RedisBackend(BaseBackend):
     chunks_length = 20
 
     def __init__(self, *args, **kwargs):
-        self.prefix = settings.REDIS_PREFIX
-        connection_klass = settings.CONNECTION_CLASS
-        if connection_klass:
-            self.client = load_class(connection_klass)()
+        self.prefix = kwargs.pop('prefix', settings.REDIS_PREFIX)
+        connection_class = kwargs.pop('connection_class', settings.CONNECTION_CLASS)
+
+        if connection_class:
+            self.client = load_class(connection_class)()
         else:
             try:
                 import redis
@@ -59,7 +60,7 @@ class RedisBackend(BaseBackend):
 
         return uid
 
-    def follow(self, from_instance, to_instance):
+    def follow(self, from_instance, to_instance, timestamp=None):
         from_uid = self.get_uid(from_instance)
 
         to_uid = self.get_uid(to_instance)
@@ -75,7 +76,7 @@ class RedisBackend(BaseBackend):
             pipe.incr(self.add_prefix('uid:%s:followings:%s:count' % (from_uid, to_identifier)))
             pipe.incr(self.add_prefix('uid:%s:followers:%s:count' % (to_uid, from_identifier)))
 
-            timestamp = int(time.time())
+            timestamp = timestamp or int(time.time())
 
             pipe.zadd(self.add_prefix('uid:%s:followers' % to_uid), **{
                 '%s' % from_uid: timestamp
@@ -179,17 +180,18 @@ class RedisBackend(BaseBackend):
                                        chunks_length=chunks_length or self.chunks_length)
 
     def is_following(self, from_instance, to_instance):
-        from_uid = self.get_uid(from_instance)
+        return self._is_following(from_instance, to_instance) is not None
 
-        to_uid = self.get_uid(to_instance)
+    def _is_following(self, from_instance, to_instance):
+        return self.client.zrank(self.add_prefix('uid:%s:followings' % self.get_uid(from_instance)),
+                                 '%s' % self.get_uid(to_instance))
 
-        return self.client.zrank(self.add_prefix('uid:%s:followings' % from_uid), '%s' % to_uid) is not None
+    def _get_followings_count_cache_key(self, instance, identifier=None):
+        return self.add_prefix('uid:%s:followings:%scount' % (self.get_uid(instance),
+                                                              ('%s:' % identifier) if identifier else ''))
 
     def _get_followings_count(self, instance, identifier=None):
-        key = 'uid:%s:followings:%scount' % (self.get_uid(instance),
-                                             ('%s:' % identifier) if identifier else '')
-
-        return self.client.get(self.add_prefix(key))
+        return self.client.get(self._get_followings_count_cache_key(instance, identifier=identifier))
 
     def get_followings_count(self, instance, identifier=None):
         result = self._get_followings_count(instance, identifier=identifier)
@@ -199,11 +201,12 @@ class RedisBackend(BaseBackend):
 
         return 0
 
-    def _get_followers_count(self, instance, identifier=None):
-        key = 'uid:%s:followers:%scount' % (self.get_uid(instance),
-                                            ('%s:' % identifier) if identifier else '')
+    def _get_followers_count_cache_key(self, instance, identifier=None):
+        return self.add_prefix('uid:%s:followers:%scount' % (self.get_uid(instance),
+                                                             ('%s:' % identifier) if identifier else ''))
 
-        return self.client.get(self.add_prefix(key))
+    def _get_followers_count(self, instance, identifier=None):
+        return self.client.get(self._get_followers_count_cache_key(instance, identifier=identifier))
 
     def get_followers_count(self, instance, identifier=None):
         result = self._get_followers_count(instance, identifier=identifier)
@@ -215,4 +218,61 @@ class RedisBackend(BaseBackend):
 
 
 class RedisFallbackBackend(RedisBackend):
-    pass
+    def __init__(self, *args, **kwargs):
+        super(RedisFallbackBackend, self).__init__(*args, **kwargs)
+
+        from . import tasks
+
+        self.backend_class = kwargs.pop('backend_class', settings.REDIS_FALLBACK_BACKEND_CLASS)
+
+        self.backend = load_class(self.backend_class)()
+
+        self.tasks = tasks
+
+    def get_followers_count(self, instance, identifier=None):
+        result = self._get_followers_count(instance, identifier=identifier)
+
+        if result is None:
+            result = self.backend.get_followers_count(instance, identifier=identifier)
+
+            self.client.set(self._get_followers_count_cache_key(instance, identifier=identifier), result)
+
+        return int(result)
+
+    def get_followings_count(self, instance, identifier=None):
+        result = self._get_followings_count(instance, identifier=identifier)
+
+        if result is None:
+            result = self.backend.get_followings_count(instance, identifier=identifier)
+
+            self.client.set(self._get_followings_count_cache_key(instance, identifier=identifier), result)
+
+        return int(result)
+
+    def follow(self, from_instance, to_instance):
+        super(RedisFallbackBackend, self).follow(from_instance, to_instance)
+
+        self.tasks.follow.delay(self.backend_class,
+                                from_instance.__class__,
+                                from_instance.pk,
+                                to_instance.__class__,
+                                to_instance.pk)
+
+    def is_following(self, from_instance, to_instance):
+        result = self._is_following(from_instance, to_instance)
+
+        if result is None:
+            result = self.backend.is_following(from_instance, to_instance)
+
+            return result
+
+        return result is not None
+
+    def unfollow(self, from_instance, to_instance):
+        super(RedisFallbackBackend, self).unfollow(from_instance, to_instance)
+
+        self.tasks.unfollow.delay(self.backend_class,
+                                  from_instance.__class__,
+                                  from_instance.pk,
+                                  to_instance.__class__,
+                                  to_instance.pk)
