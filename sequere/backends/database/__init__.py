@@ -13,12 +13,8 @@ class DatabaseBackend(BaseBackend):
     model = Follow
     chunks_length = 20
 
-    def __init__(self):
-        from .models import Follow
-
-        self._model = Follow
-
-        if not self._model._meta.installed:
+    def __init__(self, *args, **kwargs):
+        if not self.model._meta.installed:
             raise ImproperlyConfigured(
                 "The sequere.backends.database app isn't installed "
                 "correctly. Make sure it's in your INSTALLED_APPS setting.")
