@@ -205,20 +205,24 @@ Create a uid for a new resource ::
 
 Store followers count ::
 
-    INCR sequere:uid:{uid}:followers:count => 1
+    INCR sequere:uid:{to_uid}:followers:count => 1
+    INCR sequere:uid:{to_uid}:followers:{from_identifier}:count => 1
 
 Store followings count ::
 
-    INCR sequere:uid:{uid}:followings:count => 1
+    INCR sequere:uid:{from_uid}:followings:count => 1
+    INCR sequere:uid:{from_uid}:followings:{to_identifier}:count => 1
 
 
 Add a new follower ::
 
-    ZADD sequere:uid:{uid}:followers {uid} {timestamp}
+    ZADD sequere:uid:{to_uid}:followers {from_uid} {timestamp}
+    ZADD sequere:uid:{to_uid}:followers:{from_identifier} {from_uid} {timestamp}
 
 Add a new following ::
 
-    ZADD sequere:uid:{uid}:followings {uid} {timestamp}
+    ZADD sequere:uid:{from_uid}:followings {to_uid} {timestamp}
+    ZADD sequere:uid:{from_uid}:followings{to_identifier} {to_uid} {timestamp}
 
 
 Retrieve the followers uids ::
