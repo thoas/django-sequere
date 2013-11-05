@@ -19,6 +19,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.sites',
     'sequere',
+    'sequere.backends.database',
+    'sequere.backends.redis',
     'sequere.tests',
 ]
 

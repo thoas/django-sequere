@@ -1,15 +1,27 @@
 from collections import defaultdict
 from operator import itemgetter
 
-from .base import BaseBackend
+from django.core.exceptions import ImproperlyConfigured
 
-from ..models import Follow
-from ..registry import registry
+from sequere.backends.base import BaseBackend
+from sequere.registry import registry
+
+from .models import Follow
 
 
-class SimpleBackend(BaseBackend):
+class DatabaseBackend(BaseBackend):
     model = Follow
     chunks_length = 20
+
+    def __init__(self):
+        from .models import Follow
+
+        self._model = Follow
+
+        if not self._model._meta.installed:
+            raise ImproperlyConfigured(
+                "The sequere.backends.database app isn't installed "
+                "correctly. Make sure it's in your INSTALLED_APPS setting.")
 
     def _params(self, from_instance=None, to_instance=None):
         params = {}

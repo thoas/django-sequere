@@ -10,4 +10,4 @@ REDIS_PREFIX = getattr(settings, 'SEQUERE_REDIS_PREFIX',
                        getattr(settings, 'SEQUERE_PREFIX', 'sequere:'))
 
 REDIS_FALLBACK_BACKEND_CLASS = getattr(settings, 'SEQUERE_REDIS_FALLBACK_BACKEND_CLASS',
-                                       'sequere.backends.simple.SimpleBackend')
+                                       'sequere.backends.database.DatabaseBackend')

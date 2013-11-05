@@ -104,18 +104,18 @@ class BaseBackendTests(Exam):
         self.assertIn(self.project, dict(following_list))
 
 
-@override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.simple.SimpleBackend')
-class FollowSimpleTests(BaseBackendTests, TestCase):
+@override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.database.DatabaseBackend')
+class DatabaseBackendTests(BaseBackendTests, TestCase):
     def setUp(self):
-        super(FollowSimpleTests, self).setUp()
+        super(DatabaseBackendTests, self).setUp()
 
         reload(settings)
 
 
 @override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.redis.RedisBackend')
-class FollowRedisTests(BaseBackendTests, TestCase):
+class RedisBackendTests(BaseBackendTests, TestCase):
     def setUp(self):
-        super(FollowRedisTests, self).setUp()
+        super(RedisBackendTests, self).setUp()
 
         reload(settings)
 
@@ -125,9 +125,9 @@ class FollowRedisTests(BaseBackendTests, TestCase):
 
 
 @override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.redis.RedisFallbackBackend')
-class FollowRedisFallbackTests(BaseBackendTests, TestCase):
+class RedisFallbackBackendTests(BaseBackendTests, TestCase):
     def setUp(self):
-        super(FollowRedisFallbackTests, self).setUp()
+        super(RedisFallbackBackendTests, self).setUp()
 
         reload(settings)
 

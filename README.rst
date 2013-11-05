@@ -165,11 +165,19 @@ So much fun!
 Backends
 --------
 
-sequere.backends.simple.SimpleBackend
-.....................................
+sequere.backends.database.DatabaseBackend
+.........................................
 
-A simple backend to store your follows in you favorite database using the Django's
+A database backend to store your follows in you favorite database using the Django's
 ORM.
+
+
+To use this backend you will have to add 'sequere.backends.database' to your ``INSTALLED_APPS`` ::
+
+    INSTALLED_APPS = (
+        'sequere',
+        'sequere.backends.database',
+    )
 
 The follower will be identified by the couple (from_identifier, from_object_id)
 and the following by (to_identifier, to_object_id).
@@ -244,6 +252,14 @@ If you want to store follows in Redis and in your database with asynchronous tas
 this backend is for you.
 
 To run asynchronous tasks, we are using `Celery`_ tasks.
+
+To use this backend you will have to install both 'sequere.backends.database' and 'sequere.backends.redis' to your ``INSTALLED_APPS`` ::
+
+    INSTALLED_APPS = (
+        'sequere',
+        'sequere.backends.database',
+        'sequere.backends.redis',
+    )
 
 
 Configuration
