@@ -1,6 +1,7 @@
 language: python
 services:
   - redis-server
+  - rabbitmq
 python:
   - 2.7
 install: pip install tox --use-mirrors
