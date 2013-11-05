@@ -28,7 +28,7 @@ Installation
        pip install django-sequere
 
 
-2. Add 'sequere' to your ``INSTALLED_APPS`` ::
+2. Add ``sequere`` to your ``INSTALLED_APPS`` ::
 
        INSTALLED_APPS = (
            'sequere',
@@ -172,7 +172,7 @@ A database backend to store your follows in you favorite database using the Djan
 ORM.
 
 
-To use this backend you will have to add 'sequere.backends.database' to your ``INSTALLED_APPS`` ::
+To use this backend you will have to add ``sequere.backends.database`` to your ``INSTALLED_APPS`` ::
 
     INSTALLED_APPS = (
         'sequere',
@@ -253,7 +253,7 @@ this backend is for you.
 
 To run asynchronous tasks, we are using `Celery`_ tasks.
 
-To use this backend you will have to install both 'sequere.backends.database' and 'sequere.backends.redis' to your ``INSTALLED_APPS`` ::
+To use this backend you will have to install both ``sequere.backends.database`` and ``sequere.backends.redis`` to your ``INSTALLED_APPS`` ::
 
     INSTALLED_APPS = (
         'sequere',
