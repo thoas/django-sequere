@@ -270,6 +270,8 @@ Configuration
 
 The backend used to store follows
 
+Defaults to ``sequere.backends.database.Databasebackend``.
+
 ``SEQUERE_REDIS_CONNECTION``
 ............................
 
@@ -300,6 +302,8 @@ The (optional) prefix to be used for the key when storing in the Redis database.
 
     SEQUERE_REDIS_PREFIX = 'sequere:myproject:'
 
+Defaults to ``sequere:``.
+
 
 Resources
 ---------
@@ -307,6 +311,7 @@ Resources
 - `haplocheirus`_: a Redis backed storage engine for timelines written in Scala
 - `Case study from Redis documentation`_: write a twitter clone
 - `Amico`_: relationships backed by Redis
+- `django-constance`_: a multi-backends settings management application
 
 
 .. _GitHub: https://github.com/thoas/django-sequere
@@ -316,3 +321,4 @@ Resources
 .. _Case study from Redis documentation: http://redis.io/topics/twitter-clone
 .. _Amico: https://github.com/agoragames/amico
 .. _Celery: http://www.celeryproject.org/
+.. _django-constance: https://github.com/comoga/django-constance
