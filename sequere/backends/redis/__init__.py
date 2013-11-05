@@ -160,15 +160,21 @@ class RedisBackend(BaseBackend):
 
                 yield sorted(orders.items(), key=itemgetter(1), reverse=desc)
 
-    def get_followers(self, instance, desc=True, chunks_length=None):
-        return self.retrieve_instances(self.add_prefix('uid:%s:followers' % self.get_uid(instance)),
-                                       self.get_followers_count(instance),
+    def get_followers(self, instance, desc=True, chunks_length=None, identifier=None):
+        key = 'uid:%s:followers%s' % (self.get_uid(instance),
+                                      ':%s' % identifier and identifier or '')
+
+        return self.retrieve_instances(self.add_prefix(key),
+                                       self.get_followers_count(instance, identifier=identifier),
                                        desc=desc,
                                        chunks_length=chunks_length or self.chunks_length)
 
-    def get_followings(self, instance, desc=True, chunks_length=None):
-        return self.retrieve_instances(self.add_prefix('uid:%s:followings' % self.get_uid(instance)),
-                                       self.get_followings_count(instance),
+    def get_followings(self, instance, desc=True, chunks_length=None, identifier=None):
+        key = 'uid:%s:followings%s' % (self.get_uid(instance),
+                                       ':%s' % identifier and identifier or '')
+
+        return self.retrieve_instances(self.add_prefix(key),
+                                       self.get_followings_count(instance, identifier=identifier),
                                        desc=desc,
                                        chunks_length=chunks_length or self.chunks_length)
 

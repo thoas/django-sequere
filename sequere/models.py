@@ -66,17 +66,17 @@ def unfollow(from_instance, to_instance):
     return get_backend()().unfollow(from_instance, to_instance)
 
 
-def get_followings(instance, desc=True, chunks_length=None):
-    return get_backend()().get_followings(instance)
+def get_followings(instance, *args, **kwargs):
+    return get_backend()().get_followings(instance, *args, **kwargs)
 
 
-def get_followings_count(instance, identifier=None):
-    return get_backend()().get_followings_count(instance, identifier=identifier)
+def get_followings_count(instance, *args, **kwargs):
+    return get_backend()().get_followings_count(instance, *args, **kwargs)
 
 
-def get_followers_count(instance, identifier=None):
-    return get_backend()().get_followers_count(instance, identifier=identifier)
+def get_followers_count(instance, *args, **kwargs):
+    return get_backend()().get_followers_count(instance, *args, **kwargs)
 
 
-def get_followers(instance, desc=True, chunks_length=None):
-    return get_backend()().get_followers(instance)
+def get_followers(instance, *args, **kwargs):
+    return get_backend()().get_followers(instance, *args, **kwargs)
