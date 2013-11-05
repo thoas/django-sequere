@@ -70,12 +70,12 @@ def get_followings(instance, desc=True, chunks_length=None):
     return get_backend()().get_followings(instance)
 
 
-def get_followings_count(instance):
-    return get_backend()().get_followings_count(instance)
+def get_followings_count(instance, identifier=None):
+    return get_backend()().get_followings_count(instance, identifier=identifier)
 
 
-def get_followers_count(instance):
-    return get_backend()().get_followers_count(instance)
+def get_followers_count(instance, identifier=None):
+    return get_backend()().get_followers_count(instance, identifier=identifier)
 
 
 def get_followers(instance, desc=True, chunks_length=None):

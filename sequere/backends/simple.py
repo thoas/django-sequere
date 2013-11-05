@@ -100,8 +100,18 @@ class SimpleBackend(BaseBackend):
     def is_following(self, from_instance, to_instance):
         return self.model.objects.from_instance(from_instance).to_instance(to_instance).exists()
 
-    def get_followings_count(self, instance):
-        return self.model.objects.from_instance(instance).count()
+    def get_followings_count(self, instance, identifier=None):
+        qs = self.model.objects.from_instance(instance)
 
-    def get_followers_count(self, instance):
-        return self.model.objects.to_instance(instance).count()
+        if identifier:
+            qs = qs.filter(to_identifier=identifier)
+
+        return qs.count()
+
+    def get_followers_count(self, instance, identifier=None):
+        qs = self.model.objects.to_instance(instance)
+
+        if identifier:
+            qs = qs.filter(from_identifier=identifier)
+
+        return qs.count()

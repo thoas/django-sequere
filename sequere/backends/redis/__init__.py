@@ -1,4 +1,5 @@
 import time
+import six
 
 from operator import itemgetter
 from collections import defaultdict
@@ -29,7 +30,7 @@ class RedisBackend(BaseBackend):
             except ImportError:
                 raise ImproperlyConfigured(
                     "The Redis backend requires redis-py to be installed.")
-            if isinstance(settings.REDIS_CONNECTION, basestring):
+            if isinstance(settings.REDIS_CONNECTION, six.string_types):
                 self.client = redis.from_url(settings.REDIS_CONNECTION)
             else:
                 self.client = redis.Redis(**settings.REDIS_CONNECTION)
@@ -63,9 +64,16 @@ class RedisBackend(BaseBackend):
 
         to_uid = self.get_uid(to_instance)
 
+        from_identifier = registry.get_identifier(from_instance)
+
+        to_identifier = registry.get_identifier(to_instance)
+
         with self.client.pipeline() as pipe:
             pipe.incr(self.add_prefix('uid:%s:followings:count' % from_uid))
             pipe.incr(self.add_prefix('uid:%s:followers:count' % to_uid))
+
+            pipe.incr(self.add_prefix('uid:%s:followings:%s:count' % (from_uid, to_identifier)))
+            pipe.incr(self.add_prefix('uid:%s:followers:%s:count' % (to_uid, from_identifier)))
 
             timestamp = int(time.time())
 
@@ -73,7 +81,15 @@ class RedisBackend(BaseBackend):
                 '%s' % from_uid: timestamp
             })
 
+            pipe.zadd(self.add_prefix('uid:%s:followers:%s' % (to_uid, from_identifier)), **{
+                '%s' % from_uid: timestamp
+            })
+
             pipe.zadd(self.add_prefix('uid:%s:followings' % from_uid), **{
+                '%s' % to_uid: timestamp
+            })
+
+            pipe.zadd(self.add_prefix('uid:%s:followings:%s' % (from_uid, to_identifier)), **{
                 '%s' % to_uid: timestamp
             })
 
@@ -84,11 +100,22 @@ class RedisBackend(BaseBackend):
 
         to_uid = self.get_uid(to_instance)
 
+        from_identifier = registry.get_identifier(from_instance)
+
+        to_identifier = registry.get_identifier(to_instance)
+
         with self.client.pipeline() as pipe:
             pipe.decr(self.add_prefix('uid:%s:followings:count' % from_uid))
             pipe.decr(self.add_prefix('uid:%s:followers:count' % to_uid))
+
+            pipe.decr(self.add_prefix('uid:%s:followings:%s:count' % (from_uid, to_identifier)))
+            pipe.decr(self.add_prefix('uid:%s:followers:%s:count' % (to_uid, from_identifier)))
+
             pipe.zrem(self.add_prefix('uid:%s:followers' % to_uid), '%s' % from_uid)
+            pipe.zrem(self.add_prefix('uid:%s:followers:%s' % (to_uid, from_identifier)), '%s' % from_uid)
+
             pipe.zrem(self.add_prefix('uid:%s:followings' % from_uid), '%s' % to_uid)
+            pipe.zrem(self.add_prefix('uid:%s:followings:%s' % (from_uid, to_identifier)), '%s' % to_uid)
 
             pipe.execute()
 
@@ -152,22 +179,28 @@ class RedisBackend(BaseBackend):
 
         return self.client.zrank(self.add_prefix('uid:%s:followings' % from_uid), '%s' % to_uid) is not None
 
-    def _get_followings_count(self, instance):
-        return self.client.get(self.add_prefix('uid:%s:followings:count' % self.get_uid(instance)))
+    def _get_followings_count(self, instance, identifier=None):
+        key = 'uid:%s:followings:%scount' % (self.get_uid(instance),
+                                             '%s:' % identifier and identifier or '')
 
-    def get_followings_count(self, instance):
-        result = self._get_followings_count(instance)
+        return self.client.get(self.add_prefix(key))
+
+    def get_followings_count(self, instance, identifier=None):
+        result = self._get_followings_count(instance, identifier=identifier)
 
         if result:
             return int(result)
 
         return 0
 
-    def _get_followers_count(self, instance):
-        return self.client.get(self.add_prefix('uid:%s:followers:count' % self.get_uid(instance)))
+    def _get_followers_count(self, instance, identifier=None):
+        key = 'uid:%s:followers:%scount' % (self.get_uid(instance),
+                                            '%s:' % identifier and identifier or '')
 
-    def get_followers_count(self, instance):
-        result = self._get_followers_count(instance)
+        return self.client.get(self.add_prefix(key))
+
+    def get_followers_count(self, instance, identifier=None):
+        result = self._get_followers_count(instance, identifier=identifier)
 
         if result:
             return int(result)

@@ -14,11 +14,11 @@ class SequereMixin(object):
     def get_followings(self, desc=True, chunks_length=None):
         return sequere.get_followings(self, desc=desc, chunks_length=chunks_length)
 
-    def get_followings_count(self):
-        return sequere.get_followings_count(self)
+    def get_followings_count(self, identifier=None):
+        return sequere.get_followings_count(self, identifier=identifier)
 
-    def get_followers_count(self):
-        return sequere.get_followers_count(self)
+    def get_followers_count(self, identifier=None):
+        return sequere.get_followers_count(self, identifier=identifier)
 
     def get_followers(self, desc=True, chunks_length=None):
         return sequere.get_followers(self, desc=desc, chunks_length=chunks_length)
