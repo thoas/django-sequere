@@ -162,7 +162,7 @@ class RedisBackend(BaseBackend):
 
     def get_followers(self, instance, desc=True, chunks_length=None, identifier=None):
         key = 'uid:%s:followers%s' % (self.get_uid(instance),
-                                      ':%s' % identifier and identifier or '')
+                                      (':%s' % identifier) if identifier else '')
 
         return self.retrieve_instances(self.add_prefix(key),
                                        self.get_followers_count(instance, identifier=identifier),
@@ -171,7 +171,7 @@ class RedisBackend(BaseBackend):
 
     def get_followings(self, instance, desc=True, chunks_length=None, identifier=None):
         key = 'uid:%s:followings%s' % (self.get_uid(instance),
-                                       ':%s' % identifier and identifier or '')
+                                       (':%s' % identifier) if identifier else '')
 
         return self.retrieve_instances(self.add_prefix(key),
                                        self.get_followings_count(instance, identifier=identifier),
@@ -187,7 +187,7 @@ class RedisBackend(BaseBackend):
 
     def _get_followings_count(self, instance, identifier=None):
         key = 'uid:%s:followings:%scount' % (self.get_uid(instance),
-                                             '%s:' % identifier and identifier or '')
+                                             ('%s:' % identifier) if identifier else '')
 
         return self.client.get(self.add_prefix(key))
 
@@ -201,7 +201,7 @@ class RedisBackend(BaseBackend):
 
     def _get_followers_count(self, instance, identifier=None):
         key = 'uid:%s:followers:%scount' % (self.get_uid(instance),
-                                            '%s:' % identifier and identifier or '')
+                                            ('%s:' % identifier) if identifier else '')
 
         return self.client.get(self.add_prefix(key))
 

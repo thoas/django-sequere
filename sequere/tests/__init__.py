@@ -13,6 +13,7 @@ from .models import Project
 import sequere
 
 from sequere import settings
+from sequere.registry import registry
 
 sequere.autodiscover()
 
@@ -35,7 +36,11 @@ class BaseBackendTests(Exam):
 
         self.assertEqual(get_followings_count(self.user), 1)
 
+        self.assertEqual(get_followings_count(self.user, registry.get_identifier(self.project)), 1)
+
         self.assertEqual(get_followers_count(self.project), 1)
+
+        self.assertEqual(get_followers_count(self.project, registry.get_identifier(self.user)), 1)
 
     def test_unfollow(self):
         from ..models import (follow, get_followings_count,
@@ -47,7 +52,11 @@ class BaseBackendTests(Exam):
 
         self.assertEqual(get_followings_count(self.user), 0)
 
+        self.assertEqual(get_followings_count(self.user, registry.get_identifier(self.project)), 0)
+
         self.assertEqual(get_followers_count(self.project), 0)
+
+        self.assertEqual(get_followers_count(self.project, registry.get_identifier(self.user)), 0)
 
     def test_is_following(self):
         from ..models import (follow, unfollow, is_following)
@@ -65,22 +74,34 @@ class BaseBackendTests(Exam):
 
         follow(self.user, self.project)
 
-        followers = list(itertools.chain(*[followers for followers in get_followers(self.project)]))
+        follower_list = list(itertools.chain(*[followers for followers in get_followers(self.project)]))
 
-        self.assertEqual(len(followers), 1)
+        self.assertEqual(len(follower_list), 1)
 
-        self.assertIn(self.user, dict(followers))
+        self.assertIn(self.user, dict(follower_list))
+
+        follower_list = list(itertools.chain(*[followers for followers in get_followers(self.project, identifier=registry.get_identifier(self.user))]))
+
+        self.assertEqual(len(follower_list), 1)
+
+        self.assertIn(self.user, dict(follower_list))
 
     def test_get_followings(self):
         from ..models import follow, get_followings
 
         follow(self.user, self.project)
 
-        followings = list(itertools.chain(*[followers for followers in get_followings(self.user)]))
+        following_list = list(itertools.chain(*[followers for followers in get_followings(self.user)]))
 
-        self.assertEqual(len(followings), 1)
+        self.assertEqual(len(following_list), 1)
 
-        self.assertIn(self.project, dict(followings))
+        self.assertIn(self.project, dict(following_list))
+
+        following_list = list(itertools.chain(*[followers for followers in get_followings(self.user, identifier=registry.get_identifier(self.project))]))
+
+        self.assertEqual(len(following_list), 1)
+
+        self.assertIn(self.project, dict(following_list))
 
 
 @override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.simple.SimpleBackend')
