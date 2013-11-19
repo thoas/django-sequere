@@ -2,6 +2,7 @@ import itertools
 
 from django.test.utils import override_settings
 from django.test import TestCase
+from django.core.urlresolvers import reverse
 
 from exam.decorators import fixture
 from exam.cases import Exam
@@ -14,11 +15,12 @@ import sequere
 
 from sequere import settings
 from sequere.registry import registry
+from sequere.http import json
 
 sequere.autodiscover()
 
 
-class BaseBackendTests(Exam):
+class FixturesMixin(Exam):
     @fixture
     def user(self):
         return User.objects.create_user(username='thoas',
@@ -29,6 +31,8 @@ class BaseBackendTests(Exam):
     def project(self):
         return Project.objects.create(name='My super project')
 
+
+class BaseBackendTests(FixturesMixin):
     def test_follow(self):
         from ..models import follow, get_followings_count, get_followers_count
 
@@ -102,6 +106,65 @@ class BaseBackendTests(Exam):
         self.assertEqual(len(following_list), 1)
 
         self.assertIn(self.project, dict(following_list))
+
+    def test_follow_view(self):
+        user = self.user
+
+        self.client.login(username=user.username, password='$ecret')
+
+        response = self.client.post(reverse('sequere_follow'))
+
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.post(reverse('sequere_follow'), data={
+            'identifier': 'not-an-identifier',
+            'object_id': 1
+        })
+
+        self.assertEqual(response.status_code, 400)
+
+        project = self.project
+
+        identifier = registry.get_identifier(project)
+
+        response = self.client.post(reverse('sequere_follow'), data={
+            'identifier': identifier,
+            'object_id': project.pk
+        })
+
+        self.assertEqual(response.status_code, 200)
+
+        content = json.loads(response.content)
+
+        self.assertEqual(content['followings_count'], 1)
+        self.assertEqual(content['%s_followings_count' % identifier], 1)
+
+    def test_unfollow_view(self):
+        from ..models import follow
+
+        user = self.user
+
+        self.client.login(username=user.username, password='$ecret')
+
+        response = self.client.post(reverse('sequere_follow'))
+
+        project = self.project
+
+        follow(self.user, project)
+
+        identifier = registry.get_identifier(project)
+
+        response = self.client.post(reverse('sequere_unfollow'), data={
+            'identifier': identifier,
+            'object_id': project.pk
+        })
+
+        self.assertEqual(response.status_code, 200)
+
+        content = json.loads(response.content)
+
+        self.assertEqual(content['followings_count'], 0)
+        self.assertEqual(content['%s_followings_count' % identifier], 0)
 
 
 @override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.database.DatabaseBackend')

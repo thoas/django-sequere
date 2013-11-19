@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'sequere.backends.database',
     'sequere.backends.redis',
     'sequere.tests',
+    'sequere.contrib.user',
 ]
 
 SECRET_KEY = 'blabla'

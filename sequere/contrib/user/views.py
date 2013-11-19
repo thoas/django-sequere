@@ -6,7 +6,12 @@ from django.contrib.auth.decorators import login_required
 
 from sequere.registry import registry
 
-from .http import JSONResponse
+from sequere.models import (get_followers_count,
+                            follow,
+                            unfollow,
+                            get_followings_count)
+
+from sequere.http import JSONResponse
 
 
 class BaseFollowView(generic.View):
@@ -50,10 +55,10 @@ class BaseFollowView(generic.View):
                 return redirect(redirect_url)
 
         data = {
-            'followers_count': self.request.user.get_followers_count(),
-            'followings_count': self.request.user.get_followings_count(),
-            '%s_followers_count' % self.identifier: self.request.user.get_followers_count(self.identifier),
-            '%s_followings_count' % self.identifier: self.request.user.get_followings_count(self.identifier),
+            'followers_count': get_followers_count(self.request.user),
+            'followings_count': get_followings_count(self.request.user),
+            '%s_followers_count' % self.identifier: get_followers_count(self.request.user, self.identifier),
+            '%s_followings_count' % self.identifier: get_followings_count(self.request.user, self.identifier),
         }
 
         return JSONResponse(data)
@@ -64,9 +69,9 @@ class BaseFollowView(generic.View):
 
 class FollowView(BaseFollowView):
     def success(self, instance):
-        return self.request.user.follow(instance)
+        return follow(self.request.user, instance)
 
 
 class UnFollowView(BaseFollowView):
     def success(self, instance):
-        return self.request.user.unfollow(instance)
+        return unfollow(self.request.user, instance)
