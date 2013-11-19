@@ -45,6 +45,11 @@ class Follow(models.Model):
     class Meta:
         ordering = ['-created_at', ]
         app_label = 'sequere'
+        unique_together = (
+            ('from_object_id', 'from_identifier'),
+            ('from_object_id', 'from_identifier', 'to_object_id', 'to_identifier'),
+            ('to_object_id', 'to_identifier'),
+        )
 
     def __str__(self):
         return '[%s: %d] -> [%s: %d]' % (self.from_identifier,
