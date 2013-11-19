@@ -43,9 +43,9 @@ class BaseFollowView(generic.View):
         if not model:
             return HttpResponseBadRequest()
 
-        instance = get_object_or_404(model, pk=object_id)
+        self.instance = get_object_or_404(model, pk=object_id)
 
-        return self.redirect(self.success(instance))
+        return self.redirect(self.success(self.instance))
 
     def redirect(self, instance):
         if not self.request.is_ajax():
@@ -55,9 +55,9 @@ class BaseFollowView(generic.View):
                 return redirect(redirect_url)
 
         data = {
-            'followers_count': get_followers_count(self.request.user),
+            'followers_count': get_followers_count(self.instance),
             'followings_count': get_followings_count(self.request.user),
-            '%s_followers_count' % self.identifier: get_followers_count(self.request.user, self.identifier),
+            '%s_followers_count' % self.identifier: get_followers_count(self.instance, self.identifier),
             '%s_followings_count' % self.identifier: get_followings_count(self.request.user, self.identifier),
         }
 
