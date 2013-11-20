@@ -1,8 +1,5 @@
-import six
-
-from collections import defaultdict
-
 from django.core.exceptions import ImproperlyConfigured
+from django.db.models import Q
 
 from sequere.backends.base import BaseBackend
 from sequere.registry import registry
@@ -45,10 +42,21 @@ class DatabaseBackend(BaseBackend):
         new, created = self.model.objects.get_or_create(**self._params(from_instance=from_instance,
                                                                        to_instance=to_instance))
 
+        if self.is_following(to_instance, from_instance):
+            self.model.objects.filter(
+                Q(**self._params(from_instance=from_instance,
+                                 to_instance=to_instance))
+                |
+                Q(**self._params(to_instance=from_instance,
+                                 from_instance=to_instance))).update(is_mutual=True)
+
         return new
 
     def unfollow(self, from_instance, to_instance):
-        return self.model.objects.from_instance(from_instance).to_instance(to_instance).delete()
+        if self.is_following(to_instance, from_instance):
+            self.model.objects.from_instance(to_instance).to_instance(from_instance).update(is_mutual=False)
+
+        self.model.objects.from_instance(from_instance).to_instance(to_instance).delete()
 
     def get_followers(self, instance, desc=True, identifier=None):
         qs = self.model.objects.to_instance(instance)
@@ -102,48 +110,34 @@ class DatabaseBackend(BaseBackend):
 
         return qs.count()
 
-    def get_friend_ids(self, instance, identifier=None):
-        followings = defaultdict(list)
-        creations = {}
-
-        qs = self.model.objects.from_instance(instance).values_list('to_object_id',
-                                                                    'to_identifier',
-                                                                    'created_at')
+    def get_friends(self, instance, identifier=None, desc=True):
+        qs = self.model.objects.from_instance(instance).filter(is_mutual=True)
 
         if identifier:
             qs = qs.filter(to_identifier=identifier)
 
-        for to_object_id, to_identifier, created_at in qs:
-            followings[to_identifier].append(to_object_id)
-            creations[to_object_id] = created_at
+        order_by = '-created_at' if desc else 'created_at'
 
-        qs = self.model.objects.to_instance(instance).values_list('from_object_id',
-                                                                  'from_identifier',
-                                                                  'created_at')
+        qs.order_by(order_by)
 
-        if identifier:
-            qs = qs.filter(from_identifier=identifier)
+        count = self.get_followings_count(instance,
+                                          identifier=identifier)
 
-        friends = defaultdict(list)
+        transformer = DatabaseQuerySetTransformer(qs, count)
 
-        for from_object_id, from_identifier, created_at in qs:
-            if not from_object_id in followings[from_identifier]:
-                continue
+        transformer.aggregate_by('to_identifier')
+        transformer.pivot_by('to_object_id')
+        transformer.order_by(order_by)
 
-            if created_at < creations[from_object_id]:
-                created_at = creations[from_object_id]
-
-            friends[from_identifier].append((from_object_id, created_at))
-
-        return friends
+        return transformer
 
     def get_friends_count(self, instance, identifier=None):
-        count = 0
+        qs = self.model.objects.from_instance(instance).filter(is_mutual=True)
 
-        for identifier, ids in six.iteritems(self.get_friend_ids(instance, identifier=identifier)):
-            count += len(ids)
+        if identifier:
+            qs = qs.filter(to_identifier=identifier)
 
-        return count
+        return qs.count()
 
     def get_followers_count(self, instance, identifier=None):
         qs = self.model.objects.to_instance(instance)

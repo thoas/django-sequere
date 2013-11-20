@@ -23,5 +23,8 @@ class SequereMixin(object):
     def get_friends_count(self, *args, **kwargs):
         return sequere.get_friends_count(self, *args, **kwargs)
 
+    def get_friends(self, *args, **kwargs):
+        return sequere.get_friends(self, *args, **kwargs)
+
     def get_followers(self, *args, **kwargs):
         return sequere.get_followers(self, *args, **kwargs)

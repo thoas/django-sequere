@@ -40,6 +40,8 @@ class Follow(models.Model):
     to_object_id = models.PositiveIntegerField()
     to_identifier = models.CharField(max_length=50, db_index=True)
 
+    is_mutual = models.BooleanField(default=False)
+
     objects = FollowManager()
 
     class Meta:
