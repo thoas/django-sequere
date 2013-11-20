@@ -1,13 +1,13 @@
 import six
 
 from collections import defaultdict
-from operator import itemgetter
 
 from django.core.exceptions import ImproperlyConfigured
 
 from sequere.backends.base import BaseBackend
 from sequere.registry import registry
 
+from .query import DatabaseQuerySetTransformer
 from .models import Follow
 
 
@@ -54,58 +54,49 @@ class DatabaseBackend(BaseBackend):
     def get_followers(self, instance, desc=True, chunks_length=None, identifier=None):
         qs = self.model.objects.to_instance(instance)
 
+        chunks_length = chunks_length or self.chunks_length
+
         if identifier:
             qs = qs.filter(from_identifier=identifier)
 
-        return self._results(self.get_followers_count(instance, identifier=identifier),
-                             qs,
-                             'from_identifier',
-                             'from_object_id',
-                             desc=desc,
-                             chunks_length=chunks_length or self.chunks_length)
+        order_by = '-created_at' if desc else 'created_at'
 
-    def _results(self, count, qs, identifier_key, object_id_key, desc, chunks_length):
-        order = '-created_at' if desc else 'created_at'
+        qs.order_by(order_by)
+
+        count = self.get_followers_count(instance,
+                                         identifier=identifier)
+
+        transformer = DatabaseQuerySetTransformer(qs)
+        transformer.aggregate_by('from_identifier')
+        transformer.pivot_by('from_object_id')
+        transformer.order_by(order_by)
 
         for i in range(0, count, chunks_length):
-            values = (qs.order_by(order)[i:i + chunks_length].values(identifier_key,
-                                                                     object_id_key,
-                                                                     'created_at'))
-
-            identifier_ids = defaultdict(list)
-
-            orders = {}
-
-            for value in values:
-                identifier_ids[value[identifier_key]].append(value[object_id_key])
-                orders[value[object_id_key]] = value['created_at']
-
-            for identifier, ids in identifier_ids.iteritems():
-                klass = registry.identifiers.get(identifier)
-
-                results = klass.objects.filter(pk__in=ids)
-
-                for result in results:
-                    created = orders[result.pk]
-
-                    del orders[result.pk]
-
-                    orders[result] = created
-
-            yield sorted(orders.items(), key=itemgetter(1), reverse=desc)
+            yield transformer[i:i + chunks_length]
 
     def get_followings(self, instance, desc=True, chunks_length=None, identifier=None):
         qs = self.model.objects.from_instance(instance)
 
+        chunks_length = chunks_length or self.chunks_length
+
         if identifier:
             qs = qs.filter(to_identifier=identifier)
 
-        return self._results(self.get_followings_count(instance),
-                             qs,
-                             'to_identifier',
-                             'to_object_id',
-                             desc=desc,
-                             chunks_length=chunks_length or self.chunks_length)
+        order_by = '-created_at' if desc else 'created_at'
+
+        qs.order_by(order_by)
+
+        transformer = DatabaseQuerySetTransformer(qs)
+
+        count = self.get_followings_count(instance,
+                                          identifier=identifier)
+
+        transformer.aggregate_by('to_identifier')
+        transformer.pivot_by('to_object_id')
+        transformer.order_by(order_by)
+
+        for i in range(0, count, chunks_length):
+            yield transformer[i:i + chunks_length]
 
     def is_following(self, from_instance, to_instance):
         return self.model.objects.from_instance(from_instance).to_instance(to_instance).exists()
