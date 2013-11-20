@@ -13,7 +13,6 @@ from .models import Follow
 
 class DatabaseBackend(BaseBackend):
     model = Follow
-    chunks_length = 20
 
     def __init__(self, *args, **kwargs):
         if not self.model._meta.installed:
@@ -51,10 +50,8 @@ class DatabaseBackend(BaseBackend):
     def unfollow(self, from_instance, to_instance):
         return self.model.objects.from_instance(from_instance).to_instance(to_instance).delete()
 
-    def get_followers(self, instance, desc=True, chunks_length=None, identifier=None):
+    def get_followers(self, instance, desc=True, identifier=None):
         qs = self.model.objects.to_instance(instance)
-
-        chunks_length = chunks_length or self.chunks_length
 
         if identifier:
             qs = qs.filter(from_identifier=identifier)
@@ -66,18 +63,15 @@ class DatabaseBackend(BaseBackend):
         count = self.get_followers_count(instance,
                                          identifier=identifier)
 
-        transformer = DatabaseQuerySetTransformer(qs)
+        transformer = DatabaseQuerySetTransformer(qs, count)
         transformer.aggregate_by('from_identifier')
         transformer.pivot_by('from_object_id')
         transformer.order_by(order_by)
 
-        for i in range(0, count, chunks_length):
-            yield transformer[i:i + chunks_length]
+        return transformer
 
-    def get_followings(self, instance, desc=True, chunks_length=None, identifier=None):
+    def get_followings(self, instance, desc=True, identifier=None):
         qs = self.model.objects.from_instance(instance)
-
-        chunks_length = chunks_length or self.chunks_length
 
         if identifier:
             qs = qs.filter(to_identifier=identifier)
@@ -86,17 +80,16 @@ class DatabaseBackend(BaseBackend):
 
         qs.order_by(order_by)
 
-        transformer = DatabaseQuerySetTransformer(qs)
-
         count = self.get_followings_count(instance,
                                           identifier=identifier)
+
+        transformer = DatabaseQuerySetTransformer(qs, count)
 
         transformer.aggregate_by('to_identifier')
         transformer.pivot_by('to_object_id')
         transformer.order_by(order_by)
 
-        for i in range(0, count, chunks_length):
-            yield transformer[i:i + chunks_length]
+        return transformer
 
     def is_following(self, from_instance, to_instance):
         return self.model.objects.from_instance(from_instance).to_instance(to_instance).exists()

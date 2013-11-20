@@ -1,5 +1,3 @@
-import itertools
-
 from django.test.utils import override_settings
 from django.test import TestCase
 from django.core.urlresolvers import reverse
@@ -106,34 +104,22 @@ class BaseBackendTests(FixturesMixin):
 
         follow(self.user, self.project)
 
-        follower_list = list(itertools.chain(*[followers for followers in get_followers(self.project)]))
+        qs = get_followers(self.project)
 
-        self.assertEqual(len(follower_list), 1)
+        self.assertEqual(qs.count(), 1)
 
-        self.assertIn(self.user, dict(follower_list))
-
-        follower_list = list(itertools.chain(*[followers for followers in get_followers(self.project, identifier=registry.get_identifier(self.user))]))
-
-        self.assertEqual(len(follower_list), 1)
-
-        self.assertIn(self.user, dict(follower_list))
+        self.assertIn(self.user, dict(qs.all()))
 
     def test_get_followings(self):
         from ..models import follow, get_followings
 
         follow(self.user, self.project)
 
-        following_list = list(itertools.chain(*[followers for followers in get_followings(self.user)]))
+        qs = get_followings(self.user)
 
-        self.assertEqual(len(following_list), 1)
+        self.assertEqual(qs.count(), 1)
 
-        self.assertIn(self.project, dict(following_list))
-
-        following_list = list(itertools.chain(*[followers for followers in get_followings(self.user, identifier=registry.get_identifier(self.project))]))
-
-        self.assertEqual(len(following_list), 1)
-
-        self.assertIn(self.project, dict(following_list))
+        self.assertIn(self.project, dict(qs.all()))
 
     def test_follow_view(self):
         user = self.user

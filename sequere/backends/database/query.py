@@ -6,8 +6,8 @@ from sequere.registry import registry
 
 
 class DatabaseQuerySetTransformer(QuerySetTransformer):
-    def __init__(self, qs):
-        super(DatabaseQuerySetTransformer, self).__init__(qs)
+    def __init__(self, qs, count):
+        super(DatabaseQuerySetTransformer, self).__init__(qs, count)
 
         self.keys = []
 

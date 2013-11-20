@@ -7,8 +7,8 @@ from sequere import utils
 
 
 class RedisQuerySetTransformer(QuerySetTransformer):
-    def __init__(self, client, key, prefix):
-        super(RedisQuerySetTransformer, self).__init__(client)
+    def __init__(self, client, count, key, prefix):
+        super(RedisQuerySetTransformer, self).__init__(client, count)
 
         self.key = key
         self.keys = [key, ]

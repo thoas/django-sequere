@@ -14,8 +14,6 @@ from .query import RedisQuerySetTransformer
 
 
 class RedisBackend(BaseBackend):
-    chunks_length = 20
-
     def __init__(self, *args, **kwargs):
         self.prefix = kwargs.pop('prefix', settings.REDIS_PREFIX)
         connection_class = kwargs.pop('connection_class', settings.CONNECTION_CLASS)
@@ -152,30 +150,27 @@ class RedisBackend(BaseBackend):
 
             pipe.execute()
 
-    def retrieve_instances(self, key, count, desc, chunks_length):
-        transformer = RedisQuerySetTransformer(self.client, key=key, prefix=self.prefix)
+    def retrieve_instances(self, key, count, desc):
+        transformer = RedisQuerySetTransformer(self.client, count, key=key, prefix=self.prefix)
         transformer.order_by(desc)
 
-        for i in range(0, count, chunks_length):
-            yield transformer[i:i + chunks_length]
+        return transformer
 
-    def get_followers(self, instance, desc=True, chunks_length=None, identifier=None):
+    def get_followers(self, instance, desc=True, identifier=None):
         key = 'uid:%s:followers%s' % (self.get_uid(instance),
                                       (':%s' % identifier) if identifier else '')
 
         return self.retrieve_instances(self.add_prefix(key),
                                        self.get_followers_count(instance, identifier=identifier),
-                                       desc=desc,
-                                       chunks_length=chunks_length or self.chunks_length)
+                                       desc=desc)
 
-    def get_followings(self, instance, desc=True, chunks_length=None, identifier=None):
+    def get_followings(self, instance, desc=True, identifier=None):
         key = 'uid:%s:followings%s' % (self.get_uid(instance),
                                        (':%s' % identifier) if identifier else '')
 
         return self.retrieve_instances(self.add_prefix(key),
                                        self.get_followings_count(instance, identifier=identifier),
-                                       desc=desc,
-                                       chunks_length=chunks_length or self.chunks_length)
+                                       desc=desc)
 
     def is_following(self, from_instance, to_instance):
         return self._is_following(from_instance, to_instance) is not None

@@ -2,12 +2,16 @@ import six
 
 
 class QuerySetTransformer(object):
-    def __init__(self, qs):
+    def __init__(self, qs, count):
         self.qs = qs
+        self._count = count
 
     def set_limits(self, start, stop):
         self.start = start
         self.stop = stop
+
+    def __len__(self):
+        return self._count
 
     def __getitem__(self, k):
         if not isinstance(k, (slice,) + six.integer_types):
@@ -33,3 +37,10 @@ class QuerySetTransformer(object):
 
     def transform(self, qs):
         raise NotImplementedError
+
+    def count(self):
+        return self._count
+
+    def all(self):
+        self.set_limits(0, self.count())
+        return self.transform(self.qs)
