@@ -164,6 +164,14 @@ class RedisBackend(BaseBackend):
                                        self.get_followers_count(instance, identifier=identifier),
                                        desc=desc)
 
+    def get_friends(self, instance, desc=True, identifier=None):
+        key = 'uid:%s:friends%s' % (self.get_uid(instance),
+                                    (':%s' % identifier) if identifier else '')
+
+        return self.retrieve_instances(self.add_prefix(key),
+                                       self.get_friends_count(instance, identifier=identifier),
+                                       desc=desc)
+
     def get_followings(self, instance, desc=True, identifier=None):
         key = 'uid:%s:followings%s' % (self.get_uid(instance),
                                        (':%s' % identifier) if identifier else '')

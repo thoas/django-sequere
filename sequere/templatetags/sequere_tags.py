@@ -1,7 +1,7 @@
 from django import template
 
 from sequere.registry import registry
-from sequere.models import (get_followers_count, get_followings_count)
+from sequere import models
 
 register = template.Library()
 
@@ -13,9 +13,14 @@ def identifier(instance, arg=None):
 
 @register.filter
 def followers_count(instance, identifier=None):
-    return get_followers_count(instance, identifier)
+    return models.get_followers_count(instance, identifier)
 
 
 @register.filter
 def followings_count(instance, identifier=None):
-    return get_followings_count(instance, identifier)
+    return models.get_followings_count(instance, identifier)
+
+
+@register.filter
+def is_following(from_instance, to_instance):
+    return models.is_following(from_instance, to_instance)
