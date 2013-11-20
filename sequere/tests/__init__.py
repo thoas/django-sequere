@@ -62,6 +62,34 @@ class BaseBackendTests(FixturesMixin):
 
         self.assertEqual(get_followers_count(self.project, registry.get_identifier(self.user)), 0)
 
+    def test_friends(self):
+        from ..models import (follow, get_friends_count,
+                              unfollow)
+
+        follow(self.user, self.project)
+
+        self.assertEqual(get_friends_count(self.user), 0)
+
+        follow(self.project, self.user)
+
+        from_identifier = registry.get_identifier(self.user)
+        to_identifier = registry.get_identifier(self.project)
+
+        self.assertEqual(get_friends_count(self.user), 1)
+        self.assertEqual(get_friends_count(self.user, to_identifier), 1)
+        self.assertEqual(get_friends_count(self.user, from_identifier), 0)
+        self.assertEqual(get_friends_count(self.project), 1)
+        self.assertEqual(get_friends_count(self.project, from_identifier), 1)
+        self.assertEqual(get_friends_count(self.project, to_identifier), 0)
+
+        unfollow(self.user, self.project)
+
+        self.assertEqual(get_friends_count(self.project), 0)
+        self.assertEqual(get_friends_count(self.user), 0)
+
+    def test_get_friends(self):
+        pass
+
     def test_is_following(self):
         from ..models import (follow, unfollow, is_following)
 

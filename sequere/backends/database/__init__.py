@@ -1,3 +1,5 @@
+import six
+
 from collections import defaultdict
 from operator import itemgetter
 
@@ -115,6 +117,49 @@ class DatabaseBackend(BaseBackend):
             qs = qs.filter(to_identifier=identifier)
 
         return qs.count()
+
+    def get_friend_ids(self, instance, identifier=None):
+        followings = defaultdict(list)
+        creations = {}
+
+        qs = self.model.objects.from_instance(instance).values_list('to_object_id',
+                                                                    'to_identifier',
+                                                                    'created_at')
+
+        if identifier:
+            qs = qs.filter(to_identifier=identifier)
+
+        for to_object_id, to_identifier, created_at in qs:
+            followings[to_identifier].append(to_object_id)
+            creations[to_object_id] = created_at
+
+        qs = self.model.objects.to_instance(instance).values_list('from_object_id',
+                                                                  'from_identifier',
+                                                                  'created_at')
+
+        if identifier:
+            qs = qs.filter(from_identifier=identifier)
+
+        friends = defaultdict(list)
+
+        for from_object_id, from_identifier, created_at in qs:
+            if not from_object_id in followings[from_identifier]:
+                continue
+
+            if created_at < creations[from_object_id]:
+                created_at = creations[from_object_id]
+
+            friends[from_identifier].append((from_object_id, created_at))
+
+        return friends
+
+    def get_friends_count(self, instance, identifier=None):
+        count = 0
+
+        for identifier, ids in six.iteritems(self.get_friend_ids(instance, identifier=identifier)):
+            count += len(ids)
+
+        return count
 
     def get_followers_count(self, instance, identifier=None):
         qs = self.model.objects.to_instance(instance)

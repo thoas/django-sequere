@@ -94,6 +94,28 @@ class RedisBackend(BaseBackend):
                 '%s' % to_uid: timestamp
             })
 
+            if self.is_following(to_instance, from_instance):
+                pipe.incr(self.add_prefix('uid:%s:friends:%s:count' % (to_uid, from_identifier)))
+                pipe.incr(self.add_prefix('uid:%s:friends:count' % to_uid))
+
+                pipe.zadd(self.add_prefix('uid:%s:friends' % to_uid), **{
+                    '%s' % from_uid: timestamp
+                })
+
+                pipe.zadd(self.add_prefix('uid:%s:friends:%s' % (to_uid, from_identifier)), **{
+                    '%s' % from_uid: timestamp
+                })
+
+                pipe.incr(self.add_prefix('uid:%s:friends:%s:count' % (from_uid, to_identifier)))
+                pipe.incr(self.add_prefix('uid:%s:friends:count' % from_uid))
+
+                pipe.zadd(self.add_prefix('uid:%s:friends' % from_uid), **{
+                    '%s' % to_uid: timestamp
+                })
+                pipe.zadd(self.add_prefix('uid:%s:friends:%s' % (from_uid, to_identifier)), **{
+                    '%s' % to_uid: timestamp
+                })
+
             pipe.execute()
 
     def unfollow(self, from_instance, to_instance):
@@ -111,6 +133,19 @@ class RedisBackend(BaseBackend):
 
             pipe.decr(self.add_prefix('uid:%s:followings:%s:count' % (from_uid, to_identifier)))
             pipe.decr(self.add_prefix('uid:%s:followers:%s:count' % (to_uid, from_identifier)))
+
+            if self.is_following(to_instance, from_instance):
+                pipe.decr(self.add_prefix('uid:%s:friends:%s:count' % (to_uid, from_identifier)))
+                pipe.decr(self.add_prefix('uid:%s:friends:count' % to_uid))
+
+                pipe.zrem(self.add_prefix('uid:%s:friends' % to_uid), '%s' % from_uid)
+                pipe.zrem(self.add_prefix('uid:%s:friends:%s' % (to_uid, from_identifier)), '%s' % from_uid)
+
+                pipe.decr(self.add_prefix('uid:%s:friends:%s:count' % (from_uid, to_identifier)))
+                pipe.decr(self.add_prefix('uid:%s:friends:count' % from_uid))
+
+                pipe.zrem(self.add_prefix('uid:%s:friends' % from_uid), '%s' % to_uid)
+                pipe.zrem(self.add_prefix('uid:%s:friends:%s' % (from_uid, to_identifier)), '%s' % to_uid)
 
             pipe.zrem(self.add_prefix('uid:%s:followers' % to_uid), '%s' % from_uid)
             pipe.zrem(self.add_prefix('uid:%s:followers:%s' % (to_uid, from_identifier)), '%s' % from_uid)
@@ -205,11 +240,26 @@ class RedisBackend(BaseBackend):
         return self.add_prefix('uid:%s:followers:%scount' % (self.get_uid(instance),
                                                              ('%s:' % identifier) if identifier else ''))
 
+    def _get_friends_count_cache_key(self, instance, identifier=None):
+        return self.add_prefix('uid:%s:friends:%scount' % (self.get_uid(instance),
+                                                           ('%s:' % identifier) if identifier else ''))
+
     def _get_followers_count(self, instance, identifier=None):
         return self.client.get(self._get_followers_count_cache_key(instance, identifier=identifier))
 
     def get_followers_count(self, instance, identifier=None):
         result = self._get_followers_count(instance, identifier=identifier)
+
+        if result:
+            return int(result)
+
+        return 0
+
+    def _get_friends_count(self, instance, identifier=None):
+        return self.client.get(self._get_friends_count_cache_key(instance, identifier=identifier))
+
+    def get_friends_count(self, instance, identifier=None):
+        result = self._get_friends_count(instance, identifier=identifier)
 
         if result:
             return int(result)
@@ -246,6 +296,16 @@ class RedisFallbackBackend(RedisBackend):
             result = self.backend.get_followings_count(instance, identifier=identifier)
 
             self.client.set(self._get_followings_count_cache_key(instance, identifier=identifier), result)
+
+        return int(result)
+
+    def get_friends_count(self, instance, identifier=None):
+        result = self._get_friends_count(instance, identifier=identifier)
+
+        if result is None:
+            result = self.backend.get_friends_count(instance, identifier=identifier)
+
+            self.client.set(self._get_friends_count_cache_key(instance, identifier=identifier), result)
 
         return int(result)
 
