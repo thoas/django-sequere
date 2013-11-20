@@ -1,9 +1,6 @@
 import time
 import six
 
-from operator import itemgetter
-from collections import defaultdict
-
 from django.core.exceptions import ImproperlyConfigured
 
 from ..base import BaseBackend
@@ -13,7 +10,7 @@ from sequere.utils import load_class
 
 from . import settings
 
-from sequere import utils
+from .query import RedisQuerySetTransformer
 
 
 class RedisBackend(BaseBackend):
@@ -156,45 +153,11 @@ class RedisBackend(BaseBackend):
             pipe.execute()
 
     def retrieve_instances(self, key, count, desc, chunks_length):
-        pieces = [key, ]
-
-        if desc:
-            method = getattr(self.client, 'zrevrangebyscore')
-
-            pieces += ['+inf', '-inf']
-        else:
-            method = getattr(self.client, 'zrangebyscore')
-
-            pieces += ['-inf', '+inf']
+        transformer = RedisQuerySetTransformer(self.client, key=key, prefix=self.prefix)
+        transformer.order_by(desc)
 
         for i in range(0, count, chunks_length):
-            scores = method(*pieces, start=i, num=chunks_length, withscores=True)
-
-            with self.client.pipeline() as pipe:
-                for uid, score in scores:
-                    pipe.hgetall(self.add_prefix('uid:%s' % uid))
-
-                identifier_ids = defaultdict(list)
-
-                orders = {}
-
-                for i, value in enumerate(pipe.execute()):
-                    identifier_ids[value['identifier']].append(value['object_id'])
-                    orders[int(value['object_id'])] = utils.fromtimestamp(scores[i][1])
-
-                for identifier, ids in identifier_ids.iteritems():
-                    klass = registry.identifiers.get(identifier)
-
-                    results = klass.objects.filter(pk__in=ids)
-
-                    for result in results:
-                        created = orders[result.pk]
-
-                        del orders[result.pk]
-
-                        orders[result] = created
-
-                yield sorted(orders.items(), key=itemgetter(1), reverse=desc)
+            yield transformer[i:i + chunks_length]
 
     def get_followers(self, instance, desc=True, chunks_length=None, identifier=None):
         key = 'uid:%s:followers%s' % (self.get_uid(instance),
