@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import time
 import six
 
@@ -7,6 +9,7 @@ from ..base import BaseBackend
 
 from sequere.registry import registry
 from sequere.utils import load_class
+from sequere.exceptions import AlreadyFollowingException, NotFollowingException
 
 from . import settings
 
@@ -56,6 +59,9 @@ class RedisBackend(BaseBackend):
         return uid
 
     def follow(self, from_instance, to_instance, timestamp=None):
+        if self.is_following(from_instance, to_instance):
+            raise AlreadyFollowingException('%s is already following %s' % (from_instance, to_instance))
+
         from_uid = self.get_uid(from_instance)
 
         to_uid = self.get_uid(to_instance)
@@ -114,6 +120,9 @@ class RedisBackend(BaseBackend):
             pipe.execute()
 
     def unfollow(self, from_instance, to_instance):
+        if not self.is_following(from_instance, to_instance):
+            raise NotFollowingException('%s is not following %s' % (from_instance, to_instance))
+
         from_uid = self.get_uid(from_instance)
 
         to_uid = self.get_uid(to_instance)
