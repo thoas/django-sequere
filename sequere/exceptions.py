@@ -1,6 +1,10 @@
-class AlreadyFollowingException(Exception):
+class SequereException(Exception):
     pass
 
 
-class NotFollowingException(Exception):
+class AlreadyFollowingException(SequereException):
+    pass
+
+
+class NotFollowingException(SequereException):
     pass
