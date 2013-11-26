@@ -45,6 +45,9 @@ class BaseFollowView(generic.View):
 
         self.instance = get_object_or_404(model, pk=object_id)
 
+        if self.instance == self.request.user:
+            return HttpResponseBadRequest()
+
         return self.redirect(self.success(self.instance))
 
     def redirect(self, instance):
