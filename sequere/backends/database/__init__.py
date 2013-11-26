@@ -3,6 +3,7 @@ from django.db.models import Q
 
 from sequere.backends.base import BaseBackend
 from sequere.registry import registry
+from sequere.signals import followed, unfollowed
 
 from .query import DatabaseQuerySetTransformer
 from .models import Follow
@@ -42,6 +43,11 @@ class DatabaseBackend(BaseBackend):
         new, created = self.model.objects.get_or_create(**self._params(from_instance=from_instance,
                                                                        to_instance=to_instance))
 
+        if created:
+            followed.send(sender=self.model,
+                          from_instance=from_instance,
+                          to_instance=to_instance)
+
         if self.is_following(to_instance, from_instance):
             self.model.objects.filter(
                 Q(**self._params(from_instance=from_instance,
@@ -56,7 +62,16 @@ class DatabaseBackend(BaseBackend):
         if self.is_following(to_instance, from_instance):
             self.model.objects.from_instance(to_instance).to_instance(from_instance).update(is_mutual=False)
 
-        self.model.objects.from_instance(from_instance).to_instance(to_instance).delete()
+        qs = self.model.objects.from_instance(from_instance).to_instance(to_instance)
+
+        count = qs.count()
+
+        qs.delete()
+
+        if count:
+            unfollowed.send(sender=self.model,
+                            from_instance=from_instance,
+                            to_instance=to_instance)
 
     def get_followers(self, instance, desc=True, identifier=None):
         qs = self.model.objects.to_instance(instance)
