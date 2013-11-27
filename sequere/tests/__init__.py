@@ -5,22 +5,18 @@ from django.core.urlresolvers import reverse
 from exam.decorators import fixture
 from exam.cases import Exam
 
-from ..compat import User
-
 from .models import Project
-
-import sequere
 
 from sequere import settings
 from sequere.registry import registry
 from sequere.http import json
 
-sequere.autodiscover()
-
 
 class FixturesMixin(Exam):
     @fixture
     def user(self):
+        from ..compat import User
+
         return User.objects.create_user(username='thoas',
                                         email='florent@ulule.com',
                                         password='$ecret')

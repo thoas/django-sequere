@@ -18,11 +18,11 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
-    'sequere',
     'sequere.backends.database',
     'sequere.backends.redis',
     'sequere.tests',
     'sequere.contrib.user',
+    'sequere',
 ]
 
 SECRET_KEY = 'blabla'
