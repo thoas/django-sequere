@@ -10,6 +10,7 @@ from .models import Project
 from sequere import settings
 from sequere.registry import registry
 from sequere.http import json
+from sequere.backends.database.models import Follow
 
 
 class FixturesMixin(Exam):
@@ -183,6 +184,16 @@ class DatabaseBackendTests(BaseBackendTests, TestCase):
         super(DatabaseBackendTests, self).setUp()
 
         reload(settings)
+
+    def test_from_instance_and_to_instance(self):
+        from ..models import follow
+
+        follow(self.user, self.project)
+
+        instance = Follow.objects.all()[0]
+
+        self.assertEqual(instance.to_instance, self.project)
+        self.assertEqual(instance.from_instance, self.user)
 
 
 @override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.redis.RedisBackend')
