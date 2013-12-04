@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.db.models.query import QuerySet
+from django.utils.functional import cached_property
 
 from sequere.registry import registry
 
@@ -53,3 +54,15 @@ class Follow(models.Model):
                                          self.from_object_id,
                                          self.to_identifier,
                                          self.to_object_id)
+
+    @cached_property
+    def from_instance(self):
+        model = registry.identifiers.get(self.from_identifier)
+
+        return model.objects.get(pk=self.from_object_id)
+
+    @cached_property
+    def to_instance(self):
+        model = registry.identifiers.get(self.to_identifier)
+
+        return model.objects.get(pk=self.to_object_id)
