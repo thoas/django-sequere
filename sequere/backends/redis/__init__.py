@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import time
 import six
+import logging
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -10,10 +11,13 @@ from ..base import BaseBackend
 from sequere.registry import registry
 from sequere.utils import load_class
 from sequere.exceptions import AlreadyFollowingException, NotFollowingException
+from sequere.settings import FAIL_SILENTLY
 
 from . import settings
 
 from .query import RedisQuerySetTransformer
+
+logger = logging.getLogger('sequere')
 
 
 class RedisBackend(BaseBackend):
@@ -58,9 +62,14 @@ class RedisBackend(BaseBackend):
 
         return uid
 
-    def follow(self, from_instance, to_instance, timestamp=None):
+    def follow(self, from_instance, to_instance, timestamp=None,
+               fail_silently=FAIL_SILENTLY):
+
         if self.is_following(from_instance, to_instance):
-            raise AlreadyFollowingException('%s is already following %s' % (from_instance, to_instance))
+            if fail_silently is False:
+                raise AlreadyFollowingException('%s is already following %s' % (from_instance, to_instance))
+
+            return logger.error('%s is already following %s' % (from_instance, to_instance))
 
         from_uid = self.get_uid(from_instance)
 
@@ -119,9 +128,13 @@ class RedisBackend(BaseBackend):
 
             pipe.execute()
 
-    def unfollow(self, from_instance, to_instance):
+    def unfollow(self, from_instance, to_instance,
+                 fail_silently=FAIL_SILENTLY):
         if not self.is_following(from_instance, to_instance):
-            raise NotFollowingException('%s is not following %s' % (from_instance, to_instance))
+            if fail_silently is False:
+                raise NotFollowingException('%s is not following %s' % (from_instance, to_instance))
+
+            return logger.error('%s is not following %s' % (from_instance, to_instance))
 
         from_uid = self.get_uid(from_instance)
 
