@@ -8,6 +8,3 @@ REDIS_CONNECTION = getattr(settings, 'SEQUERE_REDIS_CONNECTION',
 
 REDIS_PREFIX = getattr(settings, 'SEQUERE_REDIS_PREFIX',
                        getattr(settings, 'SEQUERE_PREFIX', 'sequere:'))
-
-REDIS_FALLBACK_BACKEND_CLASS = getattr(settings, 'SEQUERE_REDIS_FALLBACK_BACKEND_CLASS',
-                                       'sequere.backends.database.DatabaseBackend')

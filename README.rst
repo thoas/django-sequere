@@ -248,22 +248,6 @@ With this implementation you can retrieve your followers ordered ::
 
     ZREVRANGEBYSCORE sequere:uid:{uid}:followers +inf -inf
 
-sequere.backends.redis.RedisFallbackBackend
-...........................................
-
-If you want to store follows in Redis and in your database with asynchronous tasks,
-this backend is for you.
-
-To run asynchronous tasks, we are using `Celery`_ tasks.
-
-To use this backend you will have to install both ``sequere.backends.database`` and ``sequere.backends.redis`` to your ``INSTALLED_APPS`` ::
-
-    INSTALLED_APPS = (
-        'sequere',
-        'sequere.backends.database',
-        'sequere.backends.redis',
-    )
-
 
 Configuration
 -------------
