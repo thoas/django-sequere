@@ -38,6 +38,9 @@ class RedisBackend(BaseBackend):
             else:
                 self.client = redis.Redis(**settings.REDIS_CONNECTION)
 
+    def clear(self):
+        self.client.flushdb()
+
     def add_prefix(self, key):
         return "%s%s" % (self.prefix, key)
 

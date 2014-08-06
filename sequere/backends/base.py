@@ -19,3 +19,6 @@ class BaseBackend(object):
 
     def get_followers_count(self, instance):
         raise NotImplemented
+
+    def clear(self):
+        raise NotImplemented
