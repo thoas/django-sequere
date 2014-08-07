@@ -209,12 +209,11 @@ class RedisBackend(BaseBackend):
         return self.client.zrank(self.add_prefix('uid:%s:followings' % self.make_uid(from_instance)),
                                  '%s' % self.make_uid(to_instance))
 
-    def _get_followings_count_cache_key(self, instance, identifier=None):
-        return self.add_prefix('uid:%s:followings:%scount' % (self.make_uid(instance),
-                                                              ('%s:' % identifier) if identifier else ''))
-
     def _get_followings_count(self, instance, identifier=None):
-        return self.client.get(self._get_followings_count_cache_key(instance, identifier=identifier))
+        cache_key = self.add_prefix('uid:%s:followings:%scount' % (self.make_uid(instance),
+                                                                   ('%s:' % identifier) if identifier else ''))
+
+        return self.client.get(cache_key)
 
     def get_followings_count(self, instance, identifier=None):
         result = self._get_followings_count(instance, identifier=identifier)
@@ -224,16 +223,11 @@ class RedisBackend(BaseBackend):
 
         return 0
 
-    def _get_followers_count_cache_key(self, instance, identifier=None):
-        return self.add_prefix('uid:%s:followers:%scount' % (self.make_uid(instance),
-                                                             ('%s:' % identifier) if identifier else ''))
-
-    def _get_friends_count_cache_key(self, instance, identifier=None):
-        return self.add_prefix('uid:%s:friends:%scount' % (self.make_uid(instance),
-                                                           ('%s:' % identifier) if identifier else ''))
-
     def _get_followers_count(self, instance, identifier=None):
-        return self.client.get(self._get_followers_count_cache_key(instance, identifier=identifier))
+        cache_key = self.add_prefix('uid:%s:followers:%scount' % (self.make_uid(instance),
+                                                                  ('%s:' % identifier) if identifier else ''))
+
+        return self.client.get(cache_key)
 
     def get_followers_count(self, instance, identifier=None):
         result = self._get_followers_count(instance, identifier=identifier)
@@ -244,7 +238,10 @@ class RedisBackend(BaseBackend):
         return 0
 
     def _get_friends_count(self, instance, identifier=None):
-        return self.client.get(self._get_friends_count_cache_key(instance, identifier=identifier))
+        cache_key = self.add_prefix('uid:%s:friends:%scount' % (self.make_uid(instance),
+                                                                ('%s:' % identifier) if identifier else ''))
+
+        return self.client.get(cache_key)
 
     def get_friends_count(self, instance, identifier=None):
         result = self._get_friends_count(instance, identifier=identifier)
