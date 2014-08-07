@@ -1,10 +1,7 @@
 from django.conf import settings
 
-CONNECTION_CLASS = getattr(settings, 'SEQUERE_REDIS_CONNECTION_CLASS',
-                           getattr(settings, 'SEQUERE_CONNECTION_CLASS', None))
+CONNECTION_CLASS = getattr(settings, 'SEQUERE_REDIS_CONNECTION_CLASS', None)
 
-REDIS_CONNECTION = getattr(settings, 'SEQUERE_REDIS_CONNECTION',
-                           getattr(settings, 'SEQUERE_CONNECTION', {}))
+CONNECTION = getattr(settings, 'SEQUERE_REDIS_CONNECTION', {})
 
-REDIS_PREFIX = getattr(settings, 'SEQUERE_REDIS_PREFIX',
-                       getattr(settings, 'SEQUERE_PREFIX', 'sequere:'))
+PREFIX = getattr(settings, 'SEQUERE_REDIS_PREFIX', 'sequere:')

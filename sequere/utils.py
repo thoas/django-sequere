@@ -1,7 +1,11 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from datetime import datetime
 
+import six
+import time
+
 from django.core import exceptions
+from django.core.exceptions import ImproperlyConfigured
 from django.utils.importlib import import_module
 from django.conf import settings
 from django.utils import timezone
@@ -66,7 +70,7 @@ def load_class(class_path, setting_name=None):
     return clazz
 
 
-def fromtimestamp(timestamp):
+def from_timestamp(timestamp):
     if settings.USE_TZ:
         import pytz
 
@@ -77,3 +81,24 @@ def fromtimestamp(timestamp):
         return local_tz.normalize(utc_dt.astimezone(local_tz))
 
     return datetime.fromtimestamp(timestamp)
+
+
+def to_timestamp(dt):
+    return int(time.mktime(dt.timetuple()))
+
+
+def get_client(connection, connection_class=None):
+    if connection_class:
+        client = load_class(connection_class)()
+    else:
+        try:
+            import redis
+        except ImportError:
+            raise ImproperlyConfigured(
+                "The Redis backend requires redis-py to be installed.")
+        if isinstance(connection, six.string_types):
+            client = redis.from_url(connection)
+        else:
+            client = redis.Redis(**connection)
+
+    return client

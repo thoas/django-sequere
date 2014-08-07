@@ -11,6 +11,7 @@ from sequere import settings
 from sequere.registry import registry
 from sequere.http import json
 from sequere.backends.database.models import Follow
+from sequere.contrib.timeline import Timeline
 
 
 class FixturesMixin(Exam):
@@ -206,3 +207,18 @@ class RedisBackendTests(BaseBackendTests, TestCase):
         from sequere.backends import get_backend
 
         get_backend()().client.flushdb()
+
+
+@override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.redis.RedisBackend')
+class TimelineTests(FixturesMixin, TestCase):
+    def setUp(self):
+        super(TimelineTests, self).setUp()
+
+        reload(settings)
+
+        from sequere.backends import get_backend
+
+        get_backend()().client.flushdb()
+
+    def test_simple_timeline(self):
+        timeline = Timeline(self.user)

@@ -45,7 +45,7 @@ class RedisQuerySetTransformer(QuerySetTransformer):
 
             for i, value in enumerate(pipe.execute()):
                 identifier_ids[value['identifier']].append(value['object_id'])
-                orders[int(value['object_id'])] = utils.fromtimestamp(scores[i][1])
+                orders[int(value['object_id'])] = utils.from_timestamp(scores[i][1])
 
             for identifier, ids in identifier_ids.iteritems():
                 klass = registry.identifiers.get(identifier)
@@ -59,4 +59,6 @@ class RedisQuerySetTransformer(QuerySetTransformer):
 
                     orders[result] = created
 
-            return sorted(orders.items(), key=itemgetter(1), reverse=self.desc)
+            return sorted(orders.items(),
+                          key=itemgetter(1),
+                          reverse=self.desc)

@@ -3,12 +3,17 @@ from .models import Project
 from ..compat import User
 from ..base import ModelBase
 
-import sequere
+from sequere.contrib.timeline import Action
+from sequere import register
 
 
 class ProjectSequere(ModelBase):
     identifier = 'projet'
 
 
-sequere.register(User)
-sequere.register(Project, ProjectSequere)
+class JoinAction(Action):
+    identifier = 'join'
+
+
+register(User)
+register(Project, ProjectSequere)

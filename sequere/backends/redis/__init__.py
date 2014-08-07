@@ -1,17 +1,15 @@
 from __future__ import unicode_literals
 
 import time
-import six
 import logging
 
-from django.core.exceptions import ImproperlyConfigured
 
 from ..base import BaseBackend
 
 from sequere.registry import registry
-from sequere.utils import load_class
 from sequere.exceptions import AlreadyFollowingException, NotFollowingException
 from sequere.settings import FAIL_SILENTLY
+from sequere.utils import get_client
 
 from . import settings
 
@@ -22,21 +20,11 @@ logger = logging.getLogger('sequere')
 
 class RedisBackend(BaseBackend):
     def __init__(self, *args, **kwargs):
-        self.prefix = kwargs.pop('prefix', settings.REDIS_PREFIX)
+        self.prefix = kwargs.pop('prefix', settings.PREFIX)
+
         connection_class = kwargs.pop('connection_class', settings.CONNECTION_CLASS)
 
-        if connection_class:
-            self.client = load_class(connection_class)()
-        else:
-            try:
-                import redis
-            except ImportError:
-                raise ImproperlyConfigured(
-                    "The Redis backend requires redis-py to be installed.")
-            if isinstance(settings.REDIS_CONNECTION, six.string_types):
-                self.client = redis.from_url(settings.REDIS_CONNECTION)
-            else:
-                self.client = redis.Redis(**settings.REDIS_CONNECTION)
+        self.client = get_client(settings.CONNECTION, connection_class=connection_class)
 
     def clear(self):
         self.client.flushdb()
@@ -60,6 +48,9 @@ class RedisBackend(BaseBackend):
             self.client.set(self.make_uid_key(instance), uid)
 
         return uid
+
+    def get_data_from_uid(self, uid):
+        return self.client.hmget(uid)
 
     def make_uid_key(self, instance):
         identifier = registry.get_identifier(instance)
