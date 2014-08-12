@@ -221,4 +221,19 @@ class TimelineTests(FixturesMixin, TestCase):
         get_backend()().client.flushdb()
 
     def test_simple_timeline(self):
+        from .sequere_registry import JoinAction, User
+
         timeline = Timeline(self.user)
+
+        timeline.save(JoinAction(self.user))
+
+        self.assertEqual(timeline.get_private_count(), 1)
+        self.assertEqual(timeline.get_public_count(), 1)
+        self.assertEqual(timeline.get_public_count(action='join'), 1)
+        self.assertEqual(timeline.get_private_count(action='join'), 1)
+        self.assertEqual(timeline.get_private_count(action=JoinAction), 1)
+        self.assertEqual(timeline.get_public_count(action=JoinAction), 1)
+        self.assertEqual(timeline.get_private_count(target=self.user), 0)
+        self.assertEqual(timeline.get_private_count(target=self.user), 0)
+        self.assertEqual(timeline.get_public_count(target=User), 0)
+        self.assertEqual(timeline.get_public_count(target=User), 0)

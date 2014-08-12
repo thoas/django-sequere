@@ -4,19 +4,23 @@ from sequere.utils import to_timestamp, from_timestamp
 
 
 class Action(object):
-    identifier = None
     depth = 1
+    verb = None
 
-    def __init__(self, actor, verb, target=None, date=None, **kwargs):
+    def __init__(self, actor, target=None, date=None, **kwargs):
         self.actor = actor
-        self.verb = verb
         self.target = target
         self.kwargs = kwargs.pop('kwargs', {})
         self.date = date
+        self.uid = None
+        self.actor_uid = None
+        self.target_uid = None
 
     def format_data(self, backend):
+        self.actor_uid = backend.make_uid(self.actor)
+
         result = {
-            'actor': backend.make_uid(self.actor),
+            'actor': self.actor_uid,
             'verb': self.verb,
         }
 
@@ -28,7 +32,9 @@ class Action(object):
         result['timestamp'] = timestamp
 
         if self.target:
-            result['target'] = backend.make_uid(self.target)
+            self.target_uid = backend.make_uid(self.target)
+
+            result['target'] = self.target_uid
 
         return result
 

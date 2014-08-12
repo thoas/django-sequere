@@ -12,7 +12,7 @@ class ProjectSequere(ModelBase):
 
 
 class JoinAction(Action):
-    identifier = 'join'
+    verb = 'join'
 
 
 register(User)
