@@ -6,6 +6,7 @@ from django.db import models
 from sequere.utils import get_client
 from sequere.registry import registry
 from sequere.backends.redis.managers import InstanceManager, Manager
+from sequere.backends.redis.utils import get_key
 
 from . import settings
 from . import signals
@@ -46,41 +47,46 @@ class Timeline(object):
 
     def _get_keys(self, action):
         keys = [
-            self.storage.add_prefix('uid:%s:private' % action.actor_uid),
+            get_key(self.storage.add_prefix('uid'), action.actor_uid, 'private')
         ]
 
         if action.actor == self.instance:
-            keys.append(self.storage.add_prefix('uid:%s:public' % action.actor_uid))
+            keys.append(get_key(self.storage.add_prefix('uid'), action.actor_uid, 'public'))
 
         if action.target:
             identifier = registry.get_identifier(action.target)
 
-            keys.append(self.storage.add_prefix('uid:%s:private:target:%s' % (action.actor_uid, identifier)))
+            keys.append(self.storage.add_prefix('uid'), action.actor_uid, 'private', 'target', identifier)
 
             if action.actor == self.instance:
-                keys.append(self.storage.add_prefix('uid:%s:public:target:%s' % (action.actor_uid, identifier)))
+                keys.append(self.storage.add_prefix('uid'), action.actor_uid, 'public', 'target', identifier)
 
         return keys
 
     def _get_count(self, name, action=None, target=None):
-        cache_key = self.storage.add_prefix('uid:%s:%s' % (self.manager.make_uid(self.instance), name))
+        segments = [
+            self.storage.add_prefix('uid'),
+            self.manager.make_uid(self.instance),
+            name,
+        ]
 
         if target:
             if isinstance(target, six.string_types):
-                cache_key += ':target:%s' % target
+                segments += ['target', target]
+
             else:
                 if isinstance(target, models.Model) or issubclass(target, models.Model):
-                    cache_key += ':target:%s' % registry.get_identifier(target)
+                    segments += ['target', registry.get_identifier(target)]
 
         if action:
             if isinstance(action, six.string_types):
-                cache_key += ':verb:%s' % action
+                segments += ['verb', action]
             elif issubclass(action, Action):
-                cache_key += ':verb:%s' % action.verb
+                segments += ['verb', action.verb]
 
-        cache_key += ':count'
+        segments += ['count', ]
 
-        result = self.client.get(cache_key)
+        result = self.client.get(get_key(*segments))
 
         if result:
             return int(result)
@@ -92,6 +98,22 @@ class Timeline(object):
 
     def get_public_count(self, action=None, target=None):
         return self._get_count('public', action=action, target=target)
+
+    def _save(self, action, data):
+        with self.client.pipeline() as pipe:
+            for key in self._get_keys(action):
+                pipe.incr('%s:count' % key)
+                pipe.incr('%s:verb:%s:count' % (key, data['verb']))
+
+                pipe.zadd(key, **{
+                    '%s' % action.uid: data['timestamp']
+                })
+
+                pipe.zadd('%s:verb:%s' % (key, data['verb']), **{
+                    '%s' % action.uid: data['timestamp']
+                })
+
+            pipe.execute()
 
     def save(self, action):
         origin = action.__class__
@@ -106,20 +128,7 @@ class Timeline(object):
 
         action.uid = uid
 
-        with self.client.pipeline() as pipe:
-            for key in self._get_keys(action):
-                pipe.incr('%s:count' % key)
-                pipe.incr('%s:verb:%s:count' % (key, data['verb']))
-
-                pipe.zadd(key, **{
-                    '%s' % uid: data['timestamp']
-                })
-
-                pipe.zadd('%s:verb:%s' % (key, data['verb']), **{
-                    '%s' % uid: data['timestamp']
-                })
-
-            pipe.execute()
+        self._save(action, data)
 
         signals.post_save.send(sender=origin,
                                instance=self.instance,
