@@ -1,6 +1,9 @@
 import time
 
 from django.utils.functional import memoize
+from django.utils.encoding import python_2_unicode_compatible
+from django.utils import six
+from django.utils.encoding import force_str
 
 from sequere.utils import to_timestamp, from_timestamp
 from sequere.registry import registry
@@ -17,6 +20,7 @@ def _get_actions():
 get_actions = memoize(_get_actions, {}, 0)
 
 
+@python_2_unicode_compatible
 class Action(object):
     verb = None
 
@@ -53,6 +57,19 @@ class Action(object):
             result['target'] = self.target_uid
 
         return result
+
+    def __str__(self):
+        if not self.target:
+            return '%s %s' % (self.actor, self.verb)
+
+        return '%s %s %s' % (self.actor, self.verb, self.target)
+
+    def __repr__(self):
+        try:
+            u = six.text_type(self)
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            u = '[Bad Unicode data]'
+        return force_str('<%s: %s>' % (self.__class__.__name__, u))
 
     @classmethod
     def from_data(cls, data, backend):

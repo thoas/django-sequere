@@ -81,7 +81,7 @@ class InstanceManager(Manager):
         klass = registry.identifiers.get(data['identifier'])
 
         try:
-            klass.objects.get(pk=data['object_id'])
+            return klass.objects.get(pk=data['object_id'])
         except klass.DoesNotExist:
             return None
 
