@@ -10,9 +10,9 @@ from sequere.registry import registry
 from sequere.exceptions import AlreadyFollowingException, NotFollowingException
 from sequere.settings import FAIL_SILENTLY
 from sequere.utils import get_client
+from sequere import signals
 
 from . import settings
-from . import signals
 from .managers import InstanceManager
 from .utils import get_key
 
@@ -101,9 +101,9 @@ class RedisBackend(BaseBackend):
             pipe.execute()
 
         if dispatch:
-            signals.follow.send(sender=from_instance.__class__,
-                                from_instance=from_instance,
-                                to_instance=to_instance)
+            signals.followed.send(sender=from_instance.__class__,
+                                  from_instance=from_instance,
+                                  to_instance=to_instance)
 
     def unfollow(self, from_instance, to_instance,
                  fail_silently=FAIL_SILENTLY,
@@ -153,9 +153,9 @@ class RedisBackend(BaseBackend):
             pipe.execute()
 
         if dispatch:
-            signals.unfollow.send(sender=from_instance.__class__,
-                                  from_instance=from_instance,
-                                  to_instance=to_instance)
+            signals.unfollowed.send(sender=from_instance.__class__,
+                                    from_instance=from_instance,
+                                    to_instance=to_instance)
 
     def retrieve_instances(self, key, count, desc):
         transformer = RedisQuerySetTransformer(self.client, count,
