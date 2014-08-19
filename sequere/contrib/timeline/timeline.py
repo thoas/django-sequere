@@ -10,6 +10,7 @@ from sequere.backends.redis.utils import get_key
 
 from . import settings
 from . import signals
+from .query import TimelineQuerySetTransformer
 
 from .action import Action
 
@@ -63,7 +64,7 @@ class Timeline(object):
 
         return keys
 
-    def _get_count(self, name, action=None, target=None):
+    def _make_key(self, name, action=None, target=None):
         segments = [
             self.storage.add_prefix('uid'),
             self.manager.make_uid(self.instance),
@@ -84,19 +85,42 @@ class Timeline(object):
             elif issubclass(action, Action):
                 segments += ['verb', action.verb]
 
-        segments += ['count', ]
+        return get_key(*segments)
 
-        result = self.client.get(get_key(*segments))
+    def _get_count(self, name, action=None, target=None):
+        key = get_key(self._make_key(name, action=action, target=target), 'count')
+
+        result = self.client.get(key)
 
         if result:
             return int(result)
 
         return 0
 
-    def get_private_count(self, action=None, target=None):
+    def retrieve_instances(self, key, count, desc):
+        transformer = TimelineQuerySetTransformer(self.client,
+                                                  count,
+                                                  key=key,
+                                                  manager=self.manager,
+                                                  prefix=self.prefix)
+        transformer.order_by(desc)
+
+        return transformer
+
+    def get_private(self, action=None, target=None, desc=True):
+        key = self._make_key('private', action=action, target=target)
+
+        return self.retrieve_instances(key, self.get_private_count(action=action, target=target), desc=desc)
+
+    def get_public(self, action=None, target=None, desc=True):
+        key = self._make_key('public', action=action, target=target)
+
+        return self.retrieve_instances(key, self.get_private_count(action=action, target=target), desc=desc)
+
+    def get_private_count(self, action=None, target=None, desc=True):
         return self._get_count('private', action=action, target=target)
 
-    def get_public_count(self, action=None, target=None):
+    def get_public_count(self, action=None, target=None, desc=True):
         return self._get_count('public', action=action, target=target)
 
     def _save(self, action, data):
@@ -115,21 +139,24 @@ class Timeline(object):
 
             pipe.execute()
 
-    def save(self, action):
+    def save(self, action, dispatch=True):
         origin = action.__class__
 
-        signals.pre_save.send(sender=origin,
-                              instance=self.instance,
-                              action=action)
+        if dispatch:
+            signals.pre_save.send(sender=origin,
+                                  instance=self.instance,
+                                  action=action)
 
         data = action.format_data(self.manager)
 
-        uid = self.storage.make_uid(data)
+        if action.uid is None:
+            uid = self.storage.make_uid(data)
 
-        action.uid = uid
+            action.uid = uid
 
         self._save(action, data)
 
-        signals.post_save.send(sender=origin,
-                               instance=self.instance,
-                               action=action)
+        if dispatch:
+            signals.post_save.send(sender=origin,
+                                   instance=self.instance,
+                                   action=action)

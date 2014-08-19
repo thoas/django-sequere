@@ -15,5 +15,11 @@ class JoinAction(Action):
     verb = 'join'
 
 
-register(User)
+class UserSequere(ModelBase):
+    identifier = 'user'
+
+    actions = [JoinAction, ]
+
+
+register(User, UserSequere)
 register(Project, ProjectSequere)

@@ -1,10 +1,23 @@
 import time
 
+from django.utils.functional import memoize
+
 from sequere.utils import to_timestamp, from_timestamp
+from sequere.registry import registry
+
+from .exceptions import ActionDoesNotExist
+
+
+def _get_actions():
+    return dict((action.verb, action)
+                for model_class in registry.values()
+                for action in getattr(model_class, 'actions', []))
+
+
+get_actions = memoize(_get_actions, {}, 0)
 
 
 class Action(object):
-    depth = 1
     verb = None
 
     def __init__(self, actor, target=None, date=None, **kwargs):
@@ -15,6 +28,9 @@ class Action(object):
         self.uid = None
         self.actor_uid = None
         self.target_uid = None
+
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def format_data(self, backend):
         self.actor_uid = backend.make_uid(self.actor)
@@ -40,4 +56,21 @@ class Action(object):
 
     @classmethod
     def from_data(cls, data, backend):
-        pass
+        verb = data['verb']
+
+        actions = get_actions()
+
+        action_class = actions.get(verb, None)
+
+        if action_class is None:
+            raise ActionDoesNotExist('Action %s does not exist' % verb)
+
+        for attr_name in ('actor', 'target', ):
+            if data.get(attr_name, None):
+                data[attr_name] = backend.get_from_uid(data[attr_name])
+            else:
+                data[attr_name] = None
+
+        data['date'] = from_timestamp(float(data['timestamp']))
+
+        return action_class(**data)

@@ -5,18 +5,20 @@ class SequereRegistry(dict):
     def __init__(self):
         self._models = {}
 
-    def sequere_for_model(self, model):
+    def for_model(self, model):
         try:
             return self._models[model]
         except KeyError:
             return
 
     def get_identifier(self, instance):
-        return dict((v, k) for k, v in self.identifiers.items()).get(instance.__class__)
+        return dict((v, k)
+                    for k, v in self.identifiers.items()).get(instance.__class__)
 
     @property
     def identifiers(self):
-        return dict((v().get_identifier(), k) for k, v in self._models.items())
+        return dict((v().get_identifier(), k)
+                    for k, v in self._models.items())
 
     def unregister(self, name):
         del self[name]
@@ -37,14 +39,14 @@ class SequereRegistry(dict):
                 sequere = arg
 
         if model:
-            self._register_model_sequere(model, sequere, **kwargs)
+            self._register_model(model, sequere, **kwargs)
         else:
             name = kwargs.get('name', sequere.__name__)
             sequere = type(name, (sequere,), kwargs)
-            self._register_sequere(sequere)
+            self._register(sequere)
 
-    def _register_model_sequere(self, model, sequere=None,
-                                name=None, **kwargs):
+    def _register_model(self, model, sequere=None,
+                        name=None, **kwargs):
 
         if name is not None:
             pass
@@ -65,10 +67,10 @@ class SequereRegistry(dict):
 
         sequere = type(name, (base,), kwargs)
 
-        self._register_sequere(sequere)
+        self._register(sequere)
         self._models[model] = sequere
 
-    def _register_sequere(self, sequere):
+    def _register(self, sequere):
         self[sequere.__name__] = sequere
 
 

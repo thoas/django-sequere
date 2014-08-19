@@ -8,4 +8,5 @@ class UserSequere(ModelBase):
     identifier = 'user'
 
 
-registry.register(User, UserSequere)
+if registry.for_model(User) is None:
+    registry.register(User, UserSequere)

@@ -11,7 +11,7 @@ from sequere import settings
 from sequere.registry import registry
 from sequere.http import json
 from sequere.backends.database.models import Follow
-from sequere.contrib.timeline import Timeline
+from sequere.contrib.timeline import Timeline, get_actions
 
 
 class FixturesMixin(Exam):
@@ -237,3 +237,28 @@ class TimelineTests(FixturesMixin, TestCase):
         self.assertEqual(timeline.get_private_count(target=self.user), 0)
         self.assertEqual(timeline.get_public_count(target=User), 0)
         self.assertEqual(timeline.get_public_count(target=User), 0)
+
+        qs = timeline.get_private()
+
+        self.assertEqual(qs.count(), 1)
+
+        results = qs.all()
+
+        self.assertEqual(len(results), 1)
+
+        qs = timeline.get_public()
+
+        self.assertEqual(qs.count(), 1)
+
+        results = qs.all()
+
+        self.assertEqual(len(results), 1)
+
+    def test_get_actions(self):
+        from .sequere_registry import JoinAction
+
+        actions = get_actions()
+
+        self.assertEqual(dict(actions), {
+            'join': JoinAction
+        })

@@ -5,12 +5,13 @@ from sequere.query import QuerySetTransformer
 from sequere.registry import registry
 from sequere import utils
 
+from .utils import get_key
+
 
 class RedisQuerySetTransformer(QuerySetTransformer):
     def __init__(self, client, count, key, prefix):
         super(RedisQuerySetTransformer, self).__init__(client, count)
 
-        self.key = key
         self.keys = [key, ]
         self.order_by(False)
         self.prefix = prefix
@@ -37,7 +38,7 @@ class RedisQuerySetTransformer(QuerySetTransformer):
 
         with self.qs.pipeline() as pipe:
             for uid, score in scores:
-                pipe.hgetall('%suid:%s' % (self.prefix, uid))
+                pipe.hgetall(get_key(self.prefix, 'uid', uid))
 
             identifier_ids = defaultdict(list)
 
