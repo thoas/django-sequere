@@ -80,7 +80,10 @@ class InstanceManager(Manager):
 
         klass = registry.identifiers.get(data['identifier'])
 
-        return klass.objects.filter(pk=data['object_id']).first()
+        try:
+            klass.objects.get(pk=data['object_id'])
+        except klass.DoesNotExist:
+            return None
 
     def get_uid(self, instance):
         return self.client.get(self.make_uid_key(instance))
