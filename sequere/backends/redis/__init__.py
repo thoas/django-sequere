@@ -158,7 +158,10 @@ class RedisBackend(BaseBackend):
                                   to_instance=to_instance)
 
     def retrieve_instances(self, key, count, desc):
-        transformer = RedisQuerySetTransformer(self.client, count, key=key, prefix=self.manager.prefix)
+        transformer = RedisQuerySetTransformer(self.client, count,
+                                               key=key,
+                                               prefix=self.manager.prefix,
+                                               manager=self.manager)
         transformer.order_by(desc)
 
         return transformer

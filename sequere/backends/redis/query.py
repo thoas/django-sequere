@@ -1,20 +1,17 @@
-from operator import itemgetter
-from collections import defaultdict
+from collections import OrderedDict
 
 from sequere.query import QuerySetTransformer
-from sequere.registry import registry
 from sequere import utils
-
-from .utils import get_key
 
 
 class RedisQuerySetTransformer(QuerySetTransformer):
-    def __init__(self, client, count, key, prefix):
+    def __init__(self, client, count, key, prefix, manager):
         super(RedisQuerySetTransformer, self).__init__(client, count)
 
         self.keys = [key, ]
         self.order_by(False)
         self.prefix = prefix
+        self.manager = manager
 
     def order_by(self, desc):
         self.desc = desc
@@ -36,30 +33,8 @@ class RedisQuerySetTransformer(QuerySetTransformer):
                              num=self.stop - self.start,
                              withscores=True)
 
-        with self.qs.pipeline() as pipe:
-            for uid, score in scores:
-                pipe.hgetall(get_key(self.prefix, 'uid', uid))
+        scores = OrderedDict(scores)
 
-            identifier_ids = defaultdict(list)
+        objects = self.manager.get_from_uid_list(scores.keys())
 
-            orders = {}
-
-            for i, value in enumerate(pipe.execute()):
-                identifier_ids[value['identifier']].append(value['object_id'])
-                orders[int(value['object_id'])] = utils.from_timestamp(scores[i][1])
-
-            for identifier, ids in identifier_ids.iteritems():
-                klass = registry.identifiers.get(identifier)
-
-                results = klass.objects.filter(pk__in=ids)
-
-                for result in results:
-                    created = orders[result.pk]
-
-                    del orders[result.pk]
-
-                    orders[result] = created
-
-            return sorted(orders.items(),
-                          key=itemgetter(1),
-                          reverse=self.desc)
+        return [(objects[i], utils.from_timestamp(value[1])) for i, value in enumerate(scores.items())]

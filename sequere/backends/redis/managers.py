@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from sequere.registry import registry
 
 from .utils import get_key
@@ -49,6 +51,29 @@ class InstanceManager(Manager):
         object_id = instance.pk
 
         return self.add_prefix(get_key('uid', identifier, object_id))
+
+    def get_from_uid_list(self, uid_list):
+        with self.client.pipeline() as pipe:
+            for uid in uid_list:
+                pipe.hgetall(self.add_prefix(get_key('uid', uid)))
+
+            identifier_ids = defaultdict(dict)
+
+            results = pipe.execute()
+
+            for i, value in enumerate(results):
+                identifier_ids[value['identifier']][int(value['object_id'])] = None
+
+            for identifier, objects in identifier_ids.iteritems():
+                klass = registry.identifiers.get(identifier)
+
+                for result in klass.objects.filter(pk__in=objects.keys()):
+                    identifier_ids[identifier][result.pk] = result
+
+            results = [identifier_ids[value['identifier']][int(value['object_id'])]
+                       for i, value in enumerate(results)]
+
+            return results
 
     def get_from_uid(self, uid):
         data = self.get_data_from_uid(uid)
