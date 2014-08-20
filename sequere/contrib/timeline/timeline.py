@@ -67,10 +67,10 @@ class Timeline(object):
         if action.target is not None and action.target != action.actor:
             identifier = registry.get_identifier(action.target)
 
-            keys.append(get_key(prefix, action.actor_uid, 'private', 'target', identifier))
+            keys.append(get_key(prefix, uid, 'private', 'target', identifier))
 
             if action.actor == self.instance:
-                keys.append(get_key(prefix, action.actor_uid, 'public', 'target', identifier))
+                keys.append(get_key(prefix, uid, 'public', 'target', identifier))
 
         return keys
 

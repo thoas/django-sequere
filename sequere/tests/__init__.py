@@ -275,7 +275,7 @@ class TimelineTests(FixturesMixin, TestCase):
     def test_dispatch_action(self):
         from sequere.contrib.timeline.tasks import dispatch_action
         from ..models import (follow, unfollow)
-        from .sequere_registry import JoinAction
+        from .sequere_registry import JoinAction, LikeAction, Project
 
         follow(self.newbie, self.user)
 
@@ -292,11 +292,32 @@ class TimelineTests(FixturesMixin, TestCase):
         self.assertEqual(timeline.get_private_count(), 1)
         self.assertEqual(timeline.get_public_count(), 0)
 
+        unfollow(self.newbie, self.user)
+
+        action = LikeAction(actor=self.user, target=self.project)
+        timeline = Timeline(self.user)
+
+        timeline.save(action)
+
+        self.assertEqual(timeline.get_private_count(), 2)
+        self.assertEqual(timeline.get_public_count(), 2)
+
+        self.assertEqual(timeline.get_private_count(target=Project), 1)
+        self.assertEqual(timeline.get_public_count(target=Project), 1)
+
+        dispatch_action(action.actor_uid, action.data)
+
+        timeline = Timeline(self.newbie)
+
+        self.assertEqual(timeline.get_private_count(), 1)
+        self.assertEqual(timeline.get_public_count(), 0)
+
     def test_get_actions(self):
-        from .sequere_registry import JoinAction
+        from .sequere_registry import JoinAction, LikeAction
 
         actions = get_actions()
 
         self.assertEqual(dict(actions), {
-            'join': JoinAction
+            'join': JoinAction,
+            'like': LikeAction
         })

@@ -15,10 +15,14 @@ class JoinAction(Action):
     verb = 'join'
 
 
+class LikeAction(Action):
+    verb = 'like'
+
+
 class UserSequere(ModelBase):
     identifier = 'user'
 
-    actions = [JoinAction, ]
+    actions = [JoinAction, LikeAction, ]
 
 
 register(User, UserSequere)
