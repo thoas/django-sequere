@@ -12,6 +12,7 @@ from sequere.backends.redis.utils import get_key
 from . import settings
 from . import signals
 from .query import TimelineQuerySetTransformer
+from .tasks import dispatch_action
 
 from .action import Action
 
@@ -188,6 +189,8 @@ class Timeline(object):
             action.uid = uid
 
         self._save(action, data)
+
+        dispatch_action.delay(action.actor_uid, data)
 
         if dispatch:
             signals.post_save.send(sender=origin,

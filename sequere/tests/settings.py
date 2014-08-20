@@ -30,3 +30,5 @@ SECRET_KEY = 'blabla'
 ROOT_URLCONF = 'sequere.tests.urls'
 
 TEST_RUNNER = 'sequere.tests.runner.DjangoTestSuiteRunner'
+
+CELERY_ALWAYS_EAGER = True
