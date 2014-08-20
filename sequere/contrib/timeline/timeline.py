@@ -2,8 +2,9 @@ import six
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
+from django.utils import timezone as datetime
 
-from sequere.utils import get_client
+from sequere.utils import get_client, to_timestamp, from_timestamp
 from sequere.registry import registry
 from sequere.backends.redis.managers import InstanceManager, Manager
 from sequere.backends.redis.utils import get_key
@@ -114,6 +115,30 @@ class Timeline(object):
         transformer.order_by(desc)
 
         return transformer
+
+    def _get_read_key(self):
+        segments = [
+            self.storage.add_prefix('uid'),
+            self.manager.make_uid(self.instance),
+            'read_at'
+        ]
+
+        return get_key(*segments)
+
+    def mark_as_read(self, timestamp=None):
+        if timestamp is None:
+            timestamp = datetime.now()
+
+        self.client.set(self._get_read_key(), to_timestamp(timestamp))
+
+    @property
+    def read_at(self):
+        result = self.client.get(self._get_read_key())
+
+        if result:
+            return from_timestamp(float(result))
+
+        return None
 
     def get_private(self, action=None, target=None, desc=True):
         key = self._make_key('private', action=action, target=target)

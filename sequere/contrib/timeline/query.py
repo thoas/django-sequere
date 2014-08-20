@@ -38,4 +38,5 @@ class TimelineQuerySetTransformer(QuerySetTransformer):
             for uid, score in scores:
                 pipe.hgetall(get_key(self.prefix, 'uid', uid))
 
-            return [Action.from_data(data, self.manager) for data in pipe.execute()]
+            return [Action.from_data(data, self.manager)
+                    for data in pipe.execute()]

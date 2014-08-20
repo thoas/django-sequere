@@ -258,6 +258,12 @@ class TimelineTests(FixturesMixin, TestCase):
 
         self.assertEqual(len(results), 1)
 
+    def test_read_at(self):
+        timeline = Timeline(self.user)
+        timeline.mark_as_read()
+
+        self.assertTrue(timeline.read_at is not None)
+
     def test_get_actions(self):
         from .sequere_registry import JoinAction
 
