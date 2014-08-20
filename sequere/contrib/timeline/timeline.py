@@ -47,20 +47,26 @@ class Timeline(object):
                                      prefix=self.prefix)
 
     def _get_keys(self, action):
+        identifier = registry.get_identifier(action.actor)
+
+        prefix = self.storage.add_prefix('uid')
+
         keys = [
-            get_key(self.storage.add_prefix('uid'), action.actor_uid, 'private')
+            get_key(prefix, action.actor_uid, 'private'),
+            get_key(prefix, action.actor_uid, 'private', 'target', identifier)
         ]
 
         if action.actor == self.instance:
-            keys.append(get_key(self.storage.add_prefix('uid'), action.actor_uid, 'public'))
+            keys.append(get_key(prefix, action.actor_uid, 'public'))
+            keys.append(get_key(prefix, action.actor_uid, 'public', 'target', identifier))
 
-        if action.target:
+        if action.target and action.target != action.actor:
             identifier = registry.get_identifier(action.target)
 
-            keys.append(self.storage.add_prefix('uid'), action.actor_uid, 'private', 'target', identifier)
+            keys.append(get_key(prefix, action.actor_uid, 'private', 'target', identifier))
 
             if action.actor == self.instance:
-                keys.append(self.storage.add_prefix('uid'), action.actor_uid, 'public', 'target', identifier)
+                keys.append(get_key(prefix, action.actor_uid, 'public', 'target', identifier))
 
         return keys
 
@@ -85,7 +91,9 @@ class Timeline(object):
             elif issubclass(action, Action):
                 segments += ['verb', action.verb]
 
-        return get_key(*segments)
+        key = get_key(*segments)
+
+        return key
 
     def _get_count(self, name, action=None, target=None):
         key = get_key(self._make_key(name, action=action, target=target), 'count')

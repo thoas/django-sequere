@@ -12,8 +12,14 @@ class SequereRegistry(dict):
             return
 
     def get_identifier(self, instance):
-        return dict((v, k)
-                    for k, v in self.identifiers.items()).get(instance.__class__)
+        from django.db import models
+
+        klass = instance
+
+        if isinstance(instance, models.Model):
+            klass = instance.__class__
+
+        return dict((v, k) for k, v in self.identifiers.items()).get(klass)
 
     @property
     def identifiers(self):
