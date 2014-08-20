@@ -49,20 +49,22 @@ class Timeline(object):
                                      prefix=self.prefix)
 
     def _get_keys(self, action):
-        identifier = registry.get_identifier(action.actor)
+        identifier = registry.get_identifier(self.instance)
 
         prefix = self.storage.add_prefix('uid')
 
+        uid = self.manager.make_uid(self.instance)
+
         keys = [
-            get_key(prefix, action.actor_uid, 'private'),
-            get_key(prefix, action.actor_uid, 'private', 'target', identifier)
+            get_key(prefix, uid, 'private'),
+            get_key(prefix, uid, 'private', 'target', identifier)
         ]
 
         if action.actor == self.instance:
-            keys.append(get_key(prefix, action.actor_uid, 'public'))
-            keys.append(get_key(prefix, action.actor_uid, 'public', 'target', identifier))
+            keys.append(get_key(prefix, uid, 'public'))
+            keys.append(get_key(prefix, uid, 'public', 'target', identifier))
 
-        if action.target and action.target != action.actor:
+        if action.target is not None and action.target != action.actor:
             identifier = registry.get_identifier(action.target)
 
             keys.append(get_key(prefix, action.actor_uid, 'private', 'target', identifier))
@@ -160,20 +162,22 @@ class Timeline(object):
     def _save(self, action, data):
         with self.client.pipeline() as pipe:
             for key in self._get_keys(action):
-                pipe.incr('%s:count' % key)
-                pipe.incr('%s:verb:%s:count' % (key, data['verb']))
+                pipe.incr(get_key(key, 'count'))
+                pipe.incr(get_key(key, 'verb', data['verb'], 'count'))
 
                 pipe.zadd(key, **{
                     '%s' % action.uid: data['timestamp']
                 })
 
-                pipe.zadd('%s:verb:%s' % (key, data['verb']), **{
+                pipe.zadd(get_key(key, 'verb', data['verb']), **{
                     '%s' % action.uid: data['timestamp']
                 })
 
             pipe.execute()
 
     def save(self, action, dispatch=True):
+        from sequere.models import get_followers_count
+
         origin = action.__class__
 
         if dispatch:
@@ -190,7 +194,8 @@ class Timeline(object):
 
         self._save(action, data)
 
-        dispatch_action.delay(action.actor_uid, data)
+        if action.actor == self.instance and get_followers_count(self.instance):
+            dispatch_action.delay(action.actor_uid, data)
 
         if dispatch:
             signals.post_save.send(sender=origin,

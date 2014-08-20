@@ -24,6 +24,14 @@ class FixturesMixin(Exam):
                                         password='$ecret')
 
     @fixture
+    def newbie(self):
+        from ..compat import User
+
+        return User.objects.create_user(username='newbie',
+                                        email='newbie@ulule.com',
+                                        password='$ecret')
+
+    @fixture
     def project(self):
         return Project.objects.create(name='My super project')
 
@@ -263,6 +271,26 @@ class TimelineTests(FixturesMixin, TestCase):
         timeline.mark_as_read()
 
         self.assertTrue(timeline.read_at is not None)
+
+    def test_dispatch_action(self):
+        from sequere.contrib.timeline.tasks import dispatch_action
+        from ..models import (follow, unfollow)
+        from .sequere_registry import JoinAction
+
+        follow(self.newbie, self.user)
+
+        timeline = Timeline(self.user)
+
+        action = JoinAction(self.user)
+
+        timeline.save(action)
+
+        dispatch_action(action.actor_uid, action.data)
+
+        timeline = Timeline(self.newbie)
+
+        self.assertEqual(timeline.get_private_count(), 1)
+        self.assertEqual(timeline.get_public_count(), 0)
 
     def test_get_actions(self):
         from .sequere_registry import JoinAction

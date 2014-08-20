@@ -32,6 +32,7 @@ class Action(object):
         self.uid = None
         self.actor_uid = None
         self.target_uid = None
+        self.data = None
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -55,6 +56,8 @@ class Action(object):
             self.target_uid = backend.make_uid(self.target)
 
             result['target'] = self.target_uid
+
+        self.data = result
 
         return result
 
