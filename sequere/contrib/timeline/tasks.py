@@ -5,15 +5,11 @@ from celery.task import task
 
 @task
 def dispatch_action(uid, data):
-    from sequere.backends import get_backend
+    from sequere.backends.redis.connection import manager
     from sequere.contrib.timeline import Timeline, Action
     from sequere.models import get_followers
 
     logger = dispatch_action.get_logger()
-
-    backend = get_backend()()
-
-    manager = backend.manager
 
     instance = manager.get_from_uid(uid)
 
@@ -22,7 +18,7 @@ def dispatch_action(uid, data):
     else:
         paginator = Paginator(get_followers(instance), 10)
 
-        action = Action.from_data(data, manager)
+        action = Action.from_data(data)
 
         for num_page in paginator.page_range:
             page = paginator.page(num_page)

@@ -7,6 +7,7 @@ from django.utils.encoding import force_str
 
 from sequere.utils import to_timestamp, from_timestamp
 from sequere.registry import registry
+from sequere.backends.redis.connection import manager as backend
 
 from .exceptions import ActionDoesNotExist
 
@@ -37,7 +38,7 @@ class Action(object):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    def format_data(self, backend):
+    def format_data(self):
         self.actor_uid = backend.make_uid(self.actor)
 
         result = {
@@ -75,7 +76,7 @@ class Action(object):
         return force_str('<%s: %s>' % (self.__class__.__name__, u))
 
     @classmethod
-    def from_data(cls, data, backend):
+    def from_data(cls, data):
         verb = data['verb']
 
         actions = get_actions()

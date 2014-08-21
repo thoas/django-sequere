@@ -1,59 +1,31 @@
 import six
 
-from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils import timezone as datetime
 
-from sequere.utils import get_client, to_timestamp, from_timestamp
+from sequere.utils import to_timestamp, from_timestamp
 from sequere.registry import registry
-from sequere.backends.redis.managers import InstanceManager, Manager
+from sequere.backends.redis.connection import manager
 from sequere.backends.redis.utils import get_key
 
-from . import settings
 from . import signals
 from .query import TimelineQuerySetTransformer
 from .tasks import dispatch_action
-
 from .action import Action
+from .connection import storage, client
 
 
 class Timeline(object):
     def __init__(self, instance, *args, **kwargs):
         self.instance = instance
-        self.prefix = kwargs.pop('prefix', settings.TIMELINE_PREFIX)
-        self.kwargs = kwargs.pop('kwargs', {})
-
-        connection_class = kwargs.pop('connection_class', settings.TIMELINE_CONNECTION_CLASS)
-
-        nydus_connection = settings.TIMELINE_NYDUS_CONNECTION
-
-        if nydus_connection:
-            try:
-                from nydus.db import create_cluster
-            except ImportError:
-                raise ImproperlyConfigured(
-                    "The nydus backend requires nydus to be installed.")
-            else:
-                self.client = create_cluster(nydus_connection)
-        else:
-            self.client = get_client(settings.TIMELINE_CONNECTION, connection_class=connection_class)
-
-        manager_class = kwargs.pop('manager_class', InstanceManager)
-
-        self.manager = manager_class(get_client(settings.CONNECTION, connection_class=connection_class),
-                                     prefix=settings.PREFIX)
-
-        storage_class = kwargs.pop('storage_class', Manager)
-
-        self.storage = storage_class(self.client,
-                                     prefix=self.prefix)
+        self.context = kwargs.pop('context', {})
 
     def _get_keys(self, action):
         identifier = registry.get_identifier(self.instance)
 
-        prefix = self.storage.add_prefix('uid')
+        prefix = storage.add_prefix('uid')
 
-        uid = self.manager.make_uid(self.instance)
+        uid = manager.make_uid(self.instance)
 
         keys = [
             get_key(prefix, uid, 'private'),
@@ -76,8 +48,8 @@ class Timeline(object):
 
     def _make_key(self, name, action=None, target=None):
         segments = [
-            self.storage.add_prefix('uid'),
-            self.manager.make_uid(self.instance),
+            storage.add_prefix('uid'),
+            manager.make_uid(self.instance),
             name,
         ]
 
@@ -102,7 +74,7 @@ class Timeline(object):
     def _get_count(self, name, action=None, target=None):
         key = get_key(self._make_key(name, action=action, target=target), 'count')
 
-        result = self.client.get(key)
+        result = client.get(key)
 
         if result:
             return int(result)
@@ -110,19 +82,17 @@ class Timeline(object):
         return 0
 
     def retrieve_instances(self, key, count, desc):
-        transformer = TimelineQuerySetTransformer(self.client,
+        transformer = TimelineQuerySetTransformer(client,
                                                   count,
-                                                  key=key,
-                                                  manager=self.manager,
-                                                  prefix=self.prefix)
+                                                  key=key)
         transformer.order_by(desc)
 
         return transformer
 
     def _get_read_key(self):
         segments = [
-            self.storage.add_prefix('uid'),
-            self.manager.make_uid(self.instance),
+            storage.add_prefix('uid'),
+            manager.make_uid(self.instance),
             'read_at'
         ]
 
@@ -132,7 +102,7 @@ class Timeline(object):
         if timestamp is None:
             timestamp = datetime.now()
 
-        self.client.set(self._get_read_key(), to_timestamp(timestamp))
+        client.set(self._get_read_key(), to_timestamp(timestamp))
 
     def get_unread_count(self, action=None, target=None):
         read_at = self.read_at or 0
@@ -142,11 +112,11 @@ class Timeline(object):
 
         key = self._make_key('private', action=action, target=target)
 
-        return self.client.zcount(key, read_at, to_timestamp(datetime.now()))
+        return client.zcount(key, read_at, to_timestamp(datetime.now()))
 
     @property
     def read_at(self):
-        result = self.client.get(self._get_read_key())
+        result = client.get(self._get_read_key())
 
         if result:
             return from_timestamp(float(result))
@@ -170,7 +140,7 @@ class Timeline(object):
         return self._get_count('public', action=action, target=target)
 
     def _save(self, action, data):
-        with self.client.pipeline() as pipe:
+        with client.pipeline() as pipe:
             for key in self._get_keys(action):
                 pipe.incr(get_key(key, 'count'))
                 pipe.incr(get_key(key, 'verb', data['verb'], 'count'))
@@ -195,10 +165,10 @@ class Timeline(object):
                                   instance=self.instance,
                                   action=action)
 
-        data = action.format_data(self.manager)
+        data = action.format_data()
 
         if action.uid is None:
-            uid = self.storage.make_uid(data)
+            uid = storage.make_uid(data)
 
             action.uid = uid
 

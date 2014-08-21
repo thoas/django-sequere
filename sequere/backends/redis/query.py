@@ -6,15 +6,15 @@ except ImportError:
 from sequere.query import QuerySetTransformer
 from sequere import utils
 
+from .connection import manager
+
 
 class RedisQuerySetTransformer(QuerySetTransformer):
-    def __init__(self, client, count, key, prefix, manager):
+    def __init__(self, client, count, key):
         super(RedisQuerySetTransformer, self).__init__(client, count)
 
         self.keys = [key, ]
         self.order_by(False)
-        self.prefix = prefix
-        self.manager = manager
 
     def order_by(self, desc):
         self.desc = desc
@@ -38,7 +38,7 @@ class RedisQuerySetTransformer(QuerySetTransformer):
 
         scores = OrderedDict(scores)
 
-        objects = self.manager.get_from_uid_list(scores.keys())
+        objects = manager.get_from_uid_list(scores.keys())
 
         return [(objects[i], utils.from_timestamp(value[1]))
                 for i, value in enumerate(scores.items())]

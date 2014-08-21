@@ -3,16 +3,15 @@ from sequere.contrib.timeline.action import Action
 
 from sequere.backends.redis.utils import get_key
 
+from .connection import storage
+
 
 class TimelineQuerySetTransformer(QuerySetTransformer):
-    def __init__(self, client, count, key, prefix, manager=None):
+    def __init__(self, client, count, key):
         super(TimelineQuerySetTransformer, self).__init__(client, count)
 
         self.keys = [key, ]
         self.order_by(False)
-        self.prefix = prefix
-
-        self.manager = manager or client
 
     def order_by(self, desc):
         self.desc = desc
@@ -36,7 +35,7 @@ class TimelineQuerySetTransformer(QuerySetTransformer):
 
         with self.qs.pipeline() as pipe:
             for uid, score in scores:
-                pipe.hgetall(get_key(self.prefix, 'uid', uid))
+                pipe.hgetall(get_key(storage.prefix, 'uid', uid))
 
-            return [Action.from_data(data, self.manager)
+            return [Action.from_data(data)
                     for data in pipe.execute()]

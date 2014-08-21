@@ -212,9 +212,9 @@ class RedisBackendTests(BaseBackendTests, TestCase):
 
         reload(settings)
 
-        from sequere.backends import get_backend
+        from sequere.backends.redis.connection import client
 
-        get_backend()().client.flushdb()
+        client.flushdb()
 
 
 @override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.redis.RedisBackend')
@@ -224,9 +224,9 @@ class TimelineTests(FixturesMixin, TestCase):
 
         reload(settings)
 
-        from sequere.backends import get_backend
+        from sequere.backends.redis.connection import client
 
-        get_backend()().client.flushdb()
+        client.flushdb()
 
     def test_simple_timeline(self):
         from .sequere_registry import JoinAction, User
