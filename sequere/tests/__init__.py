@@ -310,6 +310,12 @@ class TimelineTests(FixturesMixin, TestCase):
         timeline = Timeline(self.newbie)
 
         self.assertEqual(timeline.get_private_count(), 1)
+        self.assertEqual(timeline.get_private_unread_count(), 1)
+
+        timeline.mark_as_read()
+
+        self.assertEqual(timeline.get_private_unread_count(), 0)
+
         self.assertEqual(timeline.get_public_count(), 0)
 
     def test_get_actions(self):

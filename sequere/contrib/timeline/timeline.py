@@ -134,6 +134,22 @@ class Timeline(object):
 
         self.client.set(self._get_read_key(), to_timestamp(timestamp))
 
+    def _get_unread_count(self, name, action=None, target=None):
+        read_at = self.read_at or 0
+
+        if read_at:
+            read_at = to_timestamp(read_at)
+
+        key = self._make_key(name, action=action, target=target)
+
+        return self.client.zcount(key, read_at, to_timestamp(datetime.now()))
+
+    def get_public_unread_count(self, action=None, target=None):
+        return self._get_unread_count('public', action=action, target=target)
+
+    def get_private_unread_count(self, action=None, target=None):
+        return self._get_unread_count('private', action=action, target=target)
+
     @property
     def read_at(self):
         result = self.client.get(self._get_read_key())
