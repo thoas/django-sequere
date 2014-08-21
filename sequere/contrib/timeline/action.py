@@ -1,6 +1,6 @@
 import time
 
-from django.utils.functional import memoize
+from django.utils.functional import memoize, cached_property
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils import six
 from django.utils.encoding import force_str
@@ -31,16 +31,23 @@ class Action(object):
         self.kwargs = kwargs.pop('kwargs', {})
         self.date = date
         self.uid = None
-        self.actor_uid = None
-        self.target_uid = None
         self.data = None
 
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    def format_data(self):
-        self.actor_uid = backend.make_uid(self.actor)
+    @cached_property
+    def actor_uid(self):
+        return backend.make_uid(self.actor)
 
+    @cached_property
+    def target_uid(self):
+        if self.target:
+            return backend.make_uid(self.target)
+
+        return None
+
+    def format_data(self):
         result = {
             'actor': self.actor_uid,
             'verb': self.verb,
@@ -54,8 +61,6 @@ class Action(object):
         result['timestamp'] = timestamp
 
         if self.target:
-            self.target_uid = backend.make_uid(self.target)
-
             result['target'] = self.target_uid
 
         self.data = result
