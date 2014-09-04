@@ -179,7 +179,9 @@ class RedisBackend(BaseBackend):
     def _is_following(self, from_instance, to_instance):
         key = get_key('uid', manager.make_uid(from_instance), 'followings')
 
-        return client.zrank(manager.add_prefix(key), '%s' % manager.make_uid(to_instance))
+        result = client.zrank(manager.add_prefix(key), '%s' % manager.make_uid(to_instance))
+
+        return result
 
     def _get_followings_count(self, instance, identifier=None):
         cache_key = get_key('uid', manager.make_uid(instance), 'followings', identifier, 'count')
@@ -219,3 +221,6 @@ class RedisBackend(BaseBackend):
             return int(result)
 
         return 0
+
+    def clear(self):
+        client.flushdb()

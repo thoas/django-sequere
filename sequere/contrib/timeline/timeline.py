@@ -174,7 +174,7 @@ class Timeline(object):
 
         self._save(action, data)
 
-        if action.actor == self.instance and get_followers_count(self.instance):
+        if action.actor == self.instance and get_followers_count(self.instance) > 0:
             dispatch_action.delay(action.actor_uid, data)
 
         if dispatch:
