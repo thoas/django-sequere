@@ -138,21 +138,47 @@ class Timeline(object):
     def get_public_count(self, action=None, target=None, desc=True):
         return self._get_count('public', action=action, target=target)
 
-    def _save(self, action, data):
+    def _save(self, action):
         with client.pipeline() as pipe:
             for key in self._get_keys(action):
                 pipe.incr(get_key(key, 'count'))
-                pipe.incr(get_key(key, 'verb', data['verb'], 'count'))
+                pipe.incr(get_key(key, 'verb', action.verb, 'count'))
 
                 pipe.zadd(key, **{
-                    '%s' % action.uid: data['timestamp']
+                    '%s' % action.uid: action.timestamp
                 })
 
-                pipe.zadd(get_key(key, 'verb', data['verb']), **{
-                    '%s' % action.uid: data['timestamp']
+                pipe.zadd(get_key(key, 'verb', action.verb), **{
+                    '%s' % action.uid: action.timestamp
                 })
 
             pipe.execute()
+
+    def _delete(self, action):
+        with client.pipeline() as pipe:
+            for key in self._get_keys(action):
+                pipe.decr(get_key(key, 'count'))
+                pipe.decr(get_key(key, 'verb', action.verb, 'count'))
+
+                pipe.zrem(key, '%s' % action.uid)
+                pipe.zrem(get_key(key, 'verb', action.verb), '%s' % action.uid)
+
+            pipe.execute()
+
+    def delete(self, action, dispatch=True):
+        origin = action.__class__
+
+        if dispatch:
+            signals.pre_delete.send(sender=origin,
+                                    instance=self.instance,
+                                    action=action)
+
+        self._delete(action)
+
+        if dispatch:
+            signals.post_delete.send(sender=origin,
+                                     instance=self.instance,
+                                     action=action)
 
     def save(self, action, dispatch=True):
         from sequere.models import get_followers_count
@@ -171,7 +197,7 @@ class Timeline(object):
 
             action.uid = uid
 
-        self._save(action, data)
+        self._save(action)
 
         if action.actor == self.instance and get_followers_count(self.instance) > 0:
             dispatch_action.delay(action.actor_uid, data, dispatch=dispatch)

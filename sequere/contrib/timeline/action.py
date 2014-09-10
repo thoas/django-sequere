@@ -1,9 +1,8 @@
-import time
-
 from django.utils.functional import memoize, cached_property
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils import six
 from django.utils.encoding import force_str
+from django.utils import timezone as datetime
 
 from sequere.utils import to_timestamp, from_timestamp
 from sequere.registry import registry
@@ -29,7 +28,7 @@ class Action(object):
         self.actor = actor
         self.target = target
         self.kwargs = kwargs.pop('kwargs', {})
-        self.date = date
+        self.date = date or datetime.now()
         self.uid = None
         self.data = None
 
@@ -47,18 +46,17 @@ class Action(object):
 
         return None
 
+    @property
+    def timestamp(self):
+        return to_timestamp(self.date)
+
     def format_data(self):
         result = {
             'actor': self.actor_uid,
             'verb': self.verb,
         }
 
-        if self.date:
-            timestamp = to_timestamp(self.date)
-        else:
-            timestamp = int(time.time())
-
-        result['timestamp'] = timestamp
+        result['timestamp'] = self.timestamp
 
         if self.target:
             result['target'] = self.target_uid
@@ -97,6 +95,6 @@ class Action(object):
             else:
                 data[attr_name] = None
 
-        data['date'] = from_timestamp(float(data['timestamp']))
+        data['date'] = from_timestamp(float(data.pop('timestamp')))
 
         return action_class(**data)

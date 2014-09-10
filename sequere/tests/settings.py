@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'sequere.backends.redis',
     'sequere.tests',
     'sequere.contrib.user',
+    'sequere.contrib.timeline',
     'sequere',
 ]
 
@@ -31,6 +32,7 @@ ROOT_URLCONF = 'sequere.tests.urls'
 
 TEST_RUNNER = 'sequere.tests.runner.DjangoTestSuiteRunner'
 
-CELERY_ALWAYS_EAGER = True
-
 BROKER_BACKEND = 'memory'
+
+CELERY_ALWAYS_EAGER = True
+CELERY_EAGER_PROPAGATES_EXCEPTIONS = True

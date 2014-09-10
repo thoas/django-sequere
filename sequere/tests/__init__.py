@@ -1,3 +1,5 @@
+from .celery import app as celery_app  # noqa
+
 from django.test.utils import override_settings
 from django.test import TestCase
 from django.core.urlresolvers import reverse
@@ -275,7 +277,6 @@ class TimelineTests(FixturesMixin, TestCase):
         self.assertTrue(timeline.read_at is not None)
 
     def test_dispatch_action(self):
-        from sequere.contrib.timeline.tasks import dispatch_action
         from ..models import (follow, unfollow)
         from .sequere_registry import JoinAction, LikeAction, Project
 
@@ -286,8 +287,6 @@ class TimelineTests(FixturesMixin, TestCase):
         action = JoinAction(self.user)
 
         timeline.save(action)
-
-        dispatch_action(action.actor_uid, action.data)
 
         timeline = Timeline(self.newbie)
 
@@ -307,12 +306,10 @@ class TimelineTests(FixturesMixin, TestCase):
         self.assertEqual(timeline.get_private_count(target=Project), 1)
         self.assertEqual(timeline.get_public_count(target=Project), 1)
 
-        dispatch_action(action.actor_uid, action.data)
-
         timeline = Timeline(self.newbie)
 
-        self.assertEqual(timeline.get_private_count(), 1)
-        self.assertEqual(timeline.get_unread_count(), 1)
+        self.assertEqual(timeline.get_private_count(), 0)
+        self.assertEqual(timeline.get_unread_count(), 0)
 
         timeline.mark_as_read(timestamp=datetime.now() + timedelta(days=1))
 
@@ -329,3 +326,25 @@ class TimelineTests(FixturesMixin, TestCase):
             'join': JoinAction,
             'like': LikeAction
         })
+
+    def test_signals_actions(self):
+        from ..models import follow, unfollow
+        from .sequere_registry import JoinAction
+
+        timeline = Timeline(self.user)
+
+        action = JoinAction(self.user)
+
+        timeline.save(action)
+
+        follow(self.newbie, self.user)
+
+        timeline = Timeline(self.newbie)
+
+        self.assertEqual(timeline.get_private_count(), 1)
+        self.assertEqual(timeline.get_unread_count(), 1)
+
+        unfollow(self.newbie, self.user)
+
+        self.assertEqual(timeline.get_private_count(), 0)
+        self.assertEqual(timeline.get_unread_count(), 0)
