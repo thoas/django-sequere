@@ -130,7 +130,7 @@ class Timeline(object):
     def get_public(self, action=None, target=None, desc=True):
         key = self._make_key('public', action=action, target=target)
 
-        return self.retrieve_instances(key, self.get_private_count(action=action, target=target), desc=desc)
+        return self.retrieve_instances(key, self.get_public_count(action=action, target=target), desc=desc)
 
     def get_private_count(self, action=None, target=None, desc=True):
         return self._get_count('private', action=action, target=target)
