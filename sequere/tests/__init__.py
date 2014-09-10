@@ -2,6 +2,8 @@ from django.test.utils import override_settings
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 
+from datetime import datetime, timedelta
+
 from exam.decorators import fixture
 from exam.cases import Exam
 
@@ -312,7 +314,7 @@ class TimelineTests(FixturesMixin, TestCase):
         self.assertEqual(timeline.get_private_count(), 1)
         self.assertEqual(timeline.get_unread_count(), 1)
 
-        timeline.mark_as_read()
+        timeline.mark_as_read(timestamp=datetime.now() + timedelta(days=1))
 
         self.assertEqual(timeline.get_unread_count(), 0)
 
