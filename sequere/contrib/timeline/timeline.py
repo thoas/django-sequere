@@ -18,7 +18,6 @@ from .connection import storage, client
 class Timeline(object):
     def __init__(self, instance, *args, **kwargs):
         self.instance = instance
-        self.context = kwargs.pop('context', {})
 
     def _get_keys(self, action):
         identifier = registry.get_identifier(self.instance)
@@ -175,7 +174,7 @@ class Timeline(object):
         self._save(action, data)
 
         if action.actor == self.instance and get_followers_count(self.instance) > 0:
-            dispatch_action.delay(action.actor_uid, data)
+            dispatch_action.delay(action.actor_uid, data, dispatch=dispatch)
 
         if dispatch:
             signals.post_save.send(sender=origin,

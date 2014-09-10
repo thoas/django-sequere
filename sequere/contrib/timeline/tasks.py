@@ -4,7 +4,7 @@ from celery.task import task
 
 
 @task
-def dispatch_action(uid, data):
+def dispatch_action(uid, data, dispatch=True):
     from sequere.backends.redis.connection import manager
     from sequere.contrib.timeline import Timeline, Action
     from sequere.models import get_followers
@@ -25,4 +25,4 @@ def dispatch_action(uid, data):
 
             for obj, timestamp in page.object_list:
                 timeline = Timeline(obj)
-                timeline.save(action)
+                timeline.save(action, dispatch=dispatch)
