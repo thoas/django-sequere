@@ -7,7 +7,7 @@ import logging
 from ..base import BaseBackend
 
 from sequere.registry import registry
-from sequere.exceptions import AlreadyFollowingException, NotFollowingException
+from sequere.exceptions import AlreadyFollowingException, NotFollowingException, SequereException
 from sequere.settings import FAIL_SILENTLY
 from sequere import signals
 
@@ -23,6 +23,9 @@ class RedisBackend(BaseBackend):
     def follow(self, from_instance, to_instance, timestamp=None,
                fail_silently=FAIL_SILENTLY,
                dispatch=True):
+
+        if from_instance == to_instance:
+            raise SequereException('%s cannot follows itself' % from_instance)
 
         if self.is_following(from_instance, to_instance):
             if fail_silently is False:
