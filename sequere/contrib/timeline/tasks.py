@@ -6,8 +6,9 @@ from celery.task import task
 @task
 def dispatch_action(uid, data, dispatch=True):
     from sequere.backends.redis.connection import manager
-    from sequere.contrib.timeline import Timeline, Action
     from sequere.models import get_followers
+
+    from . import Timeline, Action
 
     logger = dispatch_action.get_logger()
 
@@ -29,8 +30,9 @@ def dispatch_action(uid, data, dispatch=True):
 
 
 def populate_actions(from_uid, to_uid, method):
-    from . import Timeline
     from sequere.backends.redis.connection import manager
+
+    from . import Timeline
 
     from_instance = manager.get_from_uid(from_uid)
 
