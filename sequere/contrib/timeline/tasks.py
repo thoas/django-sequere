@@ -25,6 +25,9 @@ def dispatch_action(uid, data, dispatch=True):
             page = paginator.page(num_page)
 
             for obj, timestamp in page.object_list:
+                if action.actor == obj:
+                    continue
+
                 timeline = Timeline(obj)
                 timeline.save(action, dispatch=dispatch)
 
