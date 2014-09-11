@@ -139,7 +139,7 @@ class Timeline(object):
         return self._get_count('public', action=action, target=target)
 
     def _save(self, action):
-        with client.pipeline() as pipe:
+        with client.map() as pipe:
             for key in self._get_keys(action):
                 pipe.incr(get_key(key, 'count'))
                 pipe.incr(get_key(key, 'verb', action.verb, 'count'))
@@ -152,18 +152,14 @@ class Timeline(object):
                     '%s' % action.uid: action.timestamp
                 })
 
-            pipe.execute()
-
     def _delete(self, action):
-        with client.pipeline() as pipe:
+        with client.map() as pipe:
             for key in self._get_keys(action):
                 pipe.decr(get_key(key, 'count'))
                 pipe.decr(get_key(key, 'verb', action.verb, 'count'))
 
                 pipe.zrem(key, '%s' % action.uid)
                 pipe.zrem(get_key(key, 'verb', action.verb), '%s' % action.uid)
-
-            pipe.execute()
 
     def delete(self, action, dispatch=True):
         origin = action.__class__

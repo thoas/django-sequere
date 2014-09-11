@@ -230,7 +230,7 @@ class TimelineTests(FixturesMixin, TestCase):
 
         from sequere.backends.redis.connection import client
 
-        client.flushdb()
+        client.flushall()
 
     def test_simple_timeline(self):
         from .sequere_registry import JoinAction, User

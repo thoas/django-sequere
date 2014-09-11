@@ -33,9 +33,11 @@ class TimelineQuerySetTransformer(QuerySetTransformer):
                              num=self.stop - self.start,
                              withscores=True)
 
-        with self.qs.pipeline() as pipe:
-            for uid, score in scores:
-                pipe.hgetall(get_key(storage.prefix, 'uid', uid))
+        results = []
 
-            return [Action.from_data(data)
-                    for data in pipe.execute()]
+        with self.qs.map() as pipe:
+            for uid, score in scores:
+                results.append(pipe.hgetall(get_key(storage.prefix, 'uid', uid)))
+
+        return [Action.from_data(data)
+                for data in results if data]
