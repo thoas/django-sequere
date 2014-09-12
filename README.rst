@@ -348,7 +348,7 @@ Now we have to test the system with the follow process ::
     []
 
 When **A** is following **B** we copy actions of **B** in the private
-timeline of **A**, ``celery`` is needed to handle these asynchronous tasks. ::
+timeline of **A**, `celery`_ is needed to handle these asynchronous tasks. ::
 
     In [15]: unfollow(newbie, thoas)
 
@@ -463,7 +463,7 @@ Defaults to ``sequere:timeline``.
         }
     }
 
-``sequere.contrib.timeline`` supports both `redis-py`_ and `nydus`_
+``sequere.contrib.timeline`` supports both `redis-py`_ and `nydus`_.
 
 If this settings is provided in your Django project then `nydus`_ will be needed
 as an additional dependency.
