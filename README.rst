@@ -87,7 +87,7 @@ You can now use Sequere like any other application, let's play with it: ::
 
     In [3]: user = User.objects.create(username='thoas')
 
-    In [4]: project = Project.objects.create(name'La classe americaine')
+    In [4]: project = Project.objects.create(name='La classe americaine')
 
     In [5]: follow(user, project)  # thoas will now follow "La classe americaine"
 
@@ -286,7 +286,18 @@ Defaults to ``sequere:``.
 Timeline
 --------
 
-The engine timeline is directly based on ``sequere`` resources system.
+The timeline engine is directly based on ``sequere`` resources system.
+
+Concept
+.......
+
+A ``Timeline`` is basically a list of ``Action``.
+
+An ``Action`` is represented by:
+* ``actor`` which is the actor of the action
+* ``verb`` which is the action name
+* ``target`` which is the target of the action (not required)
+* ``date`` which is the date when the action has been done
 
 Installation
 ............
@@ -317,10 +328,7 @@ You have to register your actions based on your resources, for example ::
     from sequere.base import Modelbase
 
 
-    class ProjectSequere(ModelBase):
-        identifier = 'projet'
-
-
+    # actions
     class JoinAction(Action):
         verb = 'join'
 
@@ -328,13 +336,16 @@ You have to register your actions based on your resources, for example ::
     class LikeAction(Action):
         verb = 'like'
 
+    # resources
+    class ProjectSequere(ModelBase):
+        identifier = 'project'
 
     class UserSequere(ModelBase):
         identifier = 'user'
 
         actions = (JoinAction, LikeAction, )
 
-
+    # register resources
     register(User, UserSequere)
     register(Project, ProjectSequere)
 
@@ -351,11 +362,11 @@ Now we have registered our actions we can play with the timeline API ::
 
     In [5]: thoas = User.objects.create(username='thoas')
 
-    In [6]: project = Project.objects.create(name'La classe americaine')
+    In [6]: project = Project.objects.create(name='La classe americaine')
 
-    In [7]: timeline = Timeline(thoas)
+    In [7]: timeline = Timeline(thoas) # create a timeline
 
-    In [8]: timeline.save(JoinAction(actor=thoas))
+    In [8]: timeline.save(JoinAction(actor=thoas)) # save the action in the timeline
 
     In [9]: timeline.get_private()
     [<JoinAction: thoas join>]
@@ -364,21 +375,21 @@ Now we have registered our actions we can play with the timeline API ::
     [<JoinAction: thoas join>]
 
 When the resource is the actor of its own action then we push the action both
-in private and public timelines.
+in **private** and **public** timelines.
 
 Now we have to test the system with the follow process ::
 
     In [11]: newbie = User.objects.create(username='newbie')
 
-    In [12]: follow(newbie, thoas)
+    In [12]: follow(newbie, thoas) # newbie is now following thoas
 
-    In [13]: Timeline(newbie).get_private()
+    In [13]: Timeline(newbie).get_private() # thoas actions now appear in the private timeline of newbie
     [<JoinAction: thoas join>]
 
     In [14]: Timeline(newbie).get_public()
     []
 
-When **A** is following **B** we copy the public timeline of **B** in the private
+When **A** is following **B** we copy actions of **B** in the private
 timeline of **A**, ``celery`` is needed to handle these asynchronous tasks. ::
 
     In [15]: unfollow(newbie, thoas)
@@ -386,8 +397,25 @@ timeline of **A**, ``celery`` is needed to handle these asynchronous tasks. ::
     In [16]: Timeline(newbie).get_private()
     []
 
-When **A** is unfollowing **B** we delete the public timeline of **B** in the private
-timeline of **B**.
+When **A** is unfollowing **B** we delete the actions of **B** in the private
+timeline of **A**.
+
+As you may have noticed the ``JoinAction`` is an action which does not need a target,
+some actions will need target, ``sequere.contrib.timeline`` provides a quick way
+to query actions for a specific target. ::
+
+    In [17]: timeline = Timeline(thoas)
+
+    In [18]: timeline.save(LikeAction(actor=thoas, target=project))
+
+    In [19]: timeline.get_private()
+    [<JoinAction: thoas join>, <LikeAction: thoas like La classe americaine>]
+
+    In [20]: timeline.get_private(target=Project) # only retrieve actions with Project resource as target
+    [<LikeAction: thoas like La classe americaine>]
+
+    In [21]: timeline.get_private(target='project') # only retrieve actions with 'project' identifier as target
+    [<LikeAction: thoas like La classe americaine>]
 
 
 Resources
