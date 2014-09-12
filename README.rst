@@ -251,10 +251,11 @@ Concept
 A ``Timeline`` is basically a list of ``Action``.
 
 An ``Action`` is represented by:
-* ``actor`` which is the actor of the action
-* ``verb`` which is the action name
-* ``target`` which is the target of the action (not required)
-* ``date`` which is the date when the action has been done
+
+- ``actor`` which is the actor of the action
+- ``verb`` which is the action name
+- ``target`` which is the target of the action (not required)
+- ``date`` which is the date when the action has been done
 
 Installation
 ............
@@ -464,7 +465,8 @@ Defaults to ``sequere:timeline``.
 
 ``sequere.contrib.timeline`` supports both `redis-py`_ and `nydus`_
 
-If this settings is provided in your Django project then `nydus`_ will be needed.
+If this settings is provided in your Django project then `nydus`_ will be needed
+as an additional dependency.
 
 
 Resources
