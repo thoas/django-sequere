@@ -3,15 +3,14 @@ from sequere.contrib.timeline.action import Action
 
 from sequere.backends.redis.utils import get_key
 
-from .connection import storage
-
 
 class TimelineQuerySetTransformer(QuerySetTransformer):
-    def __init__(self, client, count, key):
+    def __init__(self, client, count, key, prefix=None):
         super(TimelineQuerySetTransformer, self).__init__(client, count)
 
         self.keys = [key, ]
         self.order_by(False)
+        self.prefix = prefix or ''
 
     def order_by(self, desc):
         self.desc = desc
@@ -33,11 +32,29 @@ class TimelineQuerySetTransformer(QuerySetTransformer):
                              num=self.stop - self.start,
                              withscores=True)
 
+        return self._transform(scores)
+
+    def _transform(self, scores):
+        raise NotImplementedError
+
+
+class RedisTimelineQuerySetTransformer(TimelineQuerySetTransformer):
+    def _transform(self, scores):
+        with self.qs.map() as pipe:
+            for uid, score in scores:
+                pipe.hgetall(get_key(self.prefix, 'uid', uid))
+
+            return [Action.from_data(data)
+                    for data in pipe.execute()]
+
+
+class NydusTimelineQuerySetTransformer(TimelineQuerySetTransformer):
+    def _transform(self, scores):
         results = []
 
         with self.qs.map() as pipe:
             for uid, score in scores:
-                results.append(pipe.hgetall(get_key(storage.prefix, 'uid', uid)))
+                results.append(pipe.hgetall(get_key(self.prefix, 'uid', uid)))
 
         return [Action.from_data(data)
                 for data in results if data]

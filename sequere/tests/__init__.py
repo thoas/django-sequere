@@ -15,7 +15,6 @@ from sequere import settings
 from sequere.registry import registry
 from sequere.http import json
 from sequere.backends.database.models import Follow
-from sequere.contrib.timeline import Timeline, get_actions
 
 
 class FixturesMixin(Exam):
@@ -234,6 +233,7 @@ class TimelineTests(FixturesMixin, TestCase):
 
     def test_simple_timeline(self):
         from .sequere_registry import JoinAction, User
+        from sequere.contrib.timeline import Timeline
 
         timeline = Timeline(self.user)
 
@@ -271,6 +271,8 @@ class TimelineTests(FixturesMixin, TestCase):
         self.assertEqual(len(results), 1)
 
     def test_read_at(self):
+        from sequere.contrib.timeline import Timeline
+
         timeline = Timeline(self.user)
         timeline.mark_as_read()
 
@@ -279,6 +281,7 @@ class TimelineTests(FixturesMixin, TestCase):
     def test_dispatch_action(self):
         from ..models import (follow, unfollow)
         from .sequere_registry import JoinAction, LikeAction, Project
+        from sequere.contrib.timeline import Timeline
 
         follow(self.newbie, self.user)
 
@@ -319,6 +322,7 @@ class TimelineTests(FixturesMixin, TestCase):
 
     def test_get_actions(self):
         from .sequere_registry import JoinAction, LikeAction
+        from sequere.contrib.timeline import get_actions
 
         actions = get_actions()
 
@@ -330,6 +334,7 @@ class TimelineTests(FixturesMixin, TestCase):
     def test_signals_actions(self):
         from ..models import follow, unfollow
         from .sequere_registry import JoinAction
+        from sequere.contrib.timeline import Timeline
 
         timeline = Timeline(self.user)
 
@@ -348,3 +353,19 @@ class TimelineTests(FixturesMixin, TestCase):
 
         self.assertEqual(timeline.get_private_count(), 0)
         self.assertEqual(timeline.get_unread_count(), 0)
+
+
+@override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.redis.RedisBackend', SEQUERE_TIMELINE_NYDUS_CONNECTION={
+    'backend': 'nydus.db.backends.redis.Redis',
+    'router': 'nydus.db.routers.keyvalue.PartitionRouter',
+    'hosts': {
+        0: {'db': 0},
+        1: {'db': 1},
+        2: {'db': 2},
+    }
+})
+class NydusTimelineTests(TimelineTests):
+    def setUp(self):
+        super(NydusTimelineTests, self).setUp()
+
+        from sequere.contrib.timeline.connection import client

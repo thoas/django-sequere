@@ -36,13 +36,3 @@ BROKER_BACKEND = 'memory'
 
 CELERY_ALWAYS_EAGER = True
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
-
-SEQUERE_TIMELINE_NYDUS_CONNECTION = {
-    'backend': 'nydus.db.backends.redis.Redis',
-    'router': 'nydus.db.routers.keyvalue.PartitionRouter',
-    'hosts': {
-        0: {'db': 0},
-        1: {'db': 1},
-        2: {'db': 2},
-    }
-}

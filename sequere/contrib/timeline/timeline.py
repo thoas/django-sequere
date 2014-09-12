@@ -9,20 +9,22 @@ from sequere.backends.redis.connection import manager
 from sequere.backends.redis.utils import get_key
 
 from . import signals
-from .query import TimelineQuerySetTransformer
 from .tasks import dispatch_action
 from .action import Action
-from .connection import storage, client
 
 
 class Timeline(object):
     def __init__(self, instance, *args, **kwargs):
+        from .connection import storage, client
+
         self.instance = instance
+        self.storage = storage
+        self.client = client
 
     def _get_keys(self, action):
         identifier = registry.get_identifier(self.instance)
 
-        prefix = storage.add_prefix('uid')
+        prefix = self.storage.add_prefix('uid')
 
         uid = manager.make_uid(self.instance)
 
@@ -47,7 +49,7 @@ class Timeline(object):
 
     def _make_key(self, name, action=None, target=None):
         segments = [
-            storage.add_prefix('uid'),
+            self.storage.add_prefix('uid'),
             manager.make_uid(self.instance),
             name,
         ]
@@ -73,7 +75,7 @@ class Timeline(object):
     def _get_count(self, name, action=None, target=None):
         key = get_key(self._make_key(name, action=action, target=target), 'count')
 
-        result = client.get(key)
+        result = self.client.get(key)
 
         if result:
             return int(result)
@@ -81,16 +83,17 @@ class Timeline(object):
         return 0
 
     def retrieve_instances(self, key, count, desc):
-        transformer = TimelineQuerySetTransformer(client,
-                                                  count,
-                                                  key=key)
+        transformer = self.client.queryset_class(self.client,
+                                                 count,
+                                                 key=key,
+                                                 prefix=self.storage.prefix)
         transformer.order_by(desc)
 
         return transformer
 
     def _get_read_key(self):
         segments = [
-            storage.add_prefix('uid'),
+            self.storage.add_prefix('uid'),
             manager.make_uid(self.instance),
             'read_at'
         ]
@@ -101,7 +104,7 @@ class Timeline(object):
         if timestamp is None:
             timestamp = datetime.now()
 
-        client.set(self._get_read_key(), to_timestamp(timestamp))
+        self.client.set(self._get_read_key(), to_timestamp(timestamp))
 
     def get_unread_count(self, action=None, target=None):
         read_at = self.read_at or 0
@@ -111,11 +114,11 @@ class Timeline(object):
 
         key = self._make_key('private', action=action, target=target)
 
-        return client.zcount(key, read_at, to_timestamp(datetime.now()))
+        return self.client.zcount(key, read_at, to_timestamp(datetime.now()))
 
     @property
     def read_at(self):
-        result = client.get(self._get_read_key())
+        result = self.client.get(self._get_read_key())
 
         if result:
             return from_timestamp(float(result))
@@ -139,7 +142,7 @@ class Timeline(object):
         return self._get_count('public', action=action, target=target)
 
     def _save(self, action):
-        with client.map() as pipe:
+        with self.client.map() as pipe:
             for key in self._get_keys(action):
                 pipe.incr(get_key(key, 'count'))
                 pipe.incr(get_key(key, 'verb', action.verb, 'count'))
@@ -153,7 +156,7 @@ class Timeline(object):
                 })
 
     def _delete(self, action):
-        with client.map() as pipe:
+        with self.client.map() as pipe:
             for key in self._get_keys(action):
                 pipe.decr(get_key(key, 'count'))
                 pipe.decr(get_key(key, 'verb', action.verb, 'count'))
@@ -189,7 +192,7 @@ class Timeline(object):
         data = action.format_data()
 
         if action.uid is None:
-            uid = storage.make_uid(data)
+            uid = self.storage.make_uid(data)
 
             action.uid = uid
 
