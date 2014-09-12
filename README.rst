@@ -240,49 +240,6 @@ With this implementation you can retrieve your followers ordered ::
     ZREVRANGEBYSCORE sequere:uid:{uid}:followers +inf -inf
 
 
-Configuration
--------------
-
-``SEQUERE_BACKEND_CLASS``
-.........................
-
-The backend used to store follows
-
-Defaults to ``sequere.backends.database.Databasebackend``.
-
-``SEQUERE_REDIS_CONNECTION``
-............................
-
-A dictionary of parameters to pass to the to Redis client, e.g.: ::
-
-    SEQUERE_REDIS_CONNECTION = {
-        'host': 'localhost',
-        'port': 6379,
-        'db': 0,
-    }
-
-Alternatively you can use a URL to do the same: ::
-
-    SEQUERE_REDIS_CONNECTION = 'redis://username:password@localhost:6379/0'
-
-
-``SEQUERE_REDIS_CONNECTION_CLASS``
-..................................
-
-An (optional) dotted import path to a connection to use, e.g.: ::
-
-    SEQUERE_REDIS_CONNECTION_CLASS = 'myproject.myapp.mockup.Connection'
-
-``SEQUERE_REDIS_PREFIX``
-........................
-
-The (optional) prefix to be used for the key when storing in the Redis database. Defaults to 'sequere:'. E.g.: ::
-
-    SEQUERE_REDIS_PREFIX = 'sequere:myproject:'
-
-Defaults to ``sequere:``.
-
-
 Timeline
 --------
 
@@ -417,6 +374,98 @@ to query actions for a specific target. ::
     In [21]: timeline.get_private(target='project') # only retrieve actions with 'project' identifier as target
     [<LikeAction: thoas like La classe americaine>]
 
+Configuration
+-------------
+
+``SEQUERE_BACKEND_CLASS``
+.........................
+
+The backend used to store follows
+
+Defaults to ``sequere.backends.database.Databasebackend``.
+
+``SEQUERE_REDIS_CONNECTION``
+............................
+
+A dictionary of parameters to pass to the to Redis client, e.g.: ::
+
+    SEQUERE_REDIS_CONNECTION = {
+        'host': 'localhost',
+        'port': 6379,
+        'db': 0,
+    }
+
+Alternatively you can use a URL to do the same: ::
+
+    SEQUERE_REDIS_CONNECTION = 'redis://username:password@localhost:6379/0'
+
+
+``SEQUERE_REDIS_CONNECTION_CLASS``
+..................................
+
+An (optional) dotted import path to a connection to use, e.g.: ::
+
+    SEQUERE_REDIS_CONNECTION_CLASS = 'myproject.myapp.mockup.Connection'
+
+``SEQUERE_REDIS_PREFIX``
+........................
+
+The (optional) prefix to be used for the key when storing in the Redis database. ::
+
+    SEQUERE_REDIS_PREFIX = 'sequere:myproject:'
+
+Defaults to ``sequere:``.
+
+``SEQUERE_TIMELINE_CONNECTION_CLASS``
+.....................................
+
+An (optional) dotted import path to a connection to use, e.g.: ::
+
+    SEQUERE_TIMELINE_CONNECTION_CLASS = 'myproject.myapp.mockup.Connection'
+
+``SEQUERE_TIMELINE_REDIS_CONNECTION``
+.....................................
+
+A dictionary of parameters to pass to the to Redis client, e.g.: ::
+
+    SEQUERE_TIMELINE_REDIS_CONNECTION = {
+        'host': 'localhost',
+        'port': 6379,
+        'db': 0,
+    }
+
+Alternatively you can use a URL to do the same: ::
+
+    SEQUERE_TIMELINE_REDIS_CONNECTION = 'redis://username:password@localhost:6379/0'
+
+``SEQUERE_TIMELINE_REDIS_PREFIX``
+.................................
+
+The (optional) prefix to be used for the key when storing in the Redis database. ::
+
+    SEQUERE_TIMELINE_REDIS_PREFIX = 'sequere:myproject:timeline'
+
+Defaults to ``sequere:timeline``.
+
+``SEQUERE_TIMELINE_NYDUS_CONNECTION``
+.....................................
+
+`nydus`_ can be used to scale like a pro. ::
+
+    SEQUERE_TIMELINE_NYDUS_CONNECTION = {
+        'backend': 'nydus.db.backends.redis.Redis',
+        'router': 'nydus.db.routers.keyvalue.PartitionRouter',
+        'hosts': {
+            0: {'db': 0},
+            1: {'db': 1},
+            2: {'db': 2},
+        }
+    }
+
+``sequere.contrib.timeline`` supports both `redis-py`_ and `nydus`_
+
+If this settings is provided in your Django project then `nydus`_ will be needed.
+
 
 Resources
 ---------
@@ -428,6 +477,8 @@ Resources
 
 
 .. _GitHub: https://github.com/thoas/django-sequere
+.. _nydus: https://github.com/disqus/nydus
+.. _redis-py: https://github.com/andymccurdy/redis-py
 .. _celery: http://www.celeryproject.org/
 .. _Django Admin: https://docs.djangoproject.com/en/dev/ref/contrib/admin/
 .. _Sorted Sets: http://redis.io/commands#sorted_set
