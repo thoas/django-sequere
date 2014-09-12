@@ -365,7 +365,4 @@ class TimelineTests(FixturesMixin, TestCase):
     }
 })
 class NydusTimelineTests(TimelineTests):
-    def setUp(self):
-        super(NydusTimelineTests, self).setUp()
-
-        from sequere.contrib.timeline.connection import client
+    pass

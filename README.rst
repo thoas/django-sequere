@@ -5,21 +5,27 @@ django-sequere
     :alt: Build Status
     :target: http://travis-ci.org/thoas/django-sequere
 
-A generic application to follow a resource with multiple backends (db, redis, etc.)
+A generic application to follow a resource with multiple backends (db, redis, etc.).
+
+A timeline engine can be also found in ``sequere.contrib.timeline``.
 
 Compatibility
 -------------
 
 This library is compatible with:
 
-- python2.6, django1.4
 - python2.6, django1.5
 - python2.6, django1.6
 - python2.7, django1.4
 - python2.7, django1.5
 - python2.7, django1.6
+- python2.7, django1.7
 - python3.3, django1.5
 - python3.3, django1.6
+- python3.3, django1.7
+- python3.4, django1.5
+- python3.4, django1.6
+- python3.4, django1.7
 
 If I'm a liar, you can ping me.
 
@@ -71,21 +77,6 @@ another one. ::
 
 Sequere uses the same concepts as `Django Admin`_, so if you have already used it,
 you will not be lost.
-
-Last step is to tell Sequere to autodiscover your registered models: ::
-
-    # urls.py
-
-    from django.conf.urls.defaults import patterns
-
-    import sequere; sequere.autodiscover()
-
-
-    urlpatterns = patterns(
-        '',
-        # Your urls here
-    )
-
 
 You can now use Sequere like any other application, let's play with it: ::
 
@@ -292,6 +283,113 @@ The (optional) prefix to be used for the key when storing in the Redis database.
 Defaults to ``sequere:``.
 
 
+Timeline
+--------
+
+The engine timeline is directly based on ``sequere`` resources system.
+
+Installation
+............
+
+You have to follow installation instructions of ``sequere`` first before installing
+``sequere.contrib.timeline``.
+
+Add ``sequere.contrib.timeline`` to your ``INSTALLED_APPS`` ::
+
+       INSTALLED_APPS = (
+           'sequere.contrib.timeline',
+       )
+
+``sequere.contrib.timeline`` requires `celery`_ to work properly,
+so you will have to install it.
+
+Usage
+.....
+
+You have to register your actions based on your resources, for example ::
+
+    # sequere_registry.py
+
+    from .models import Project, User
+
+    from sequere.contrib.timeline import Action
+    from sequere import register
+    from sequere.base import Modelbase
+
+
+    class ProjectSequere(ModelBase):
+        identifier = 'projet'
+
+
+    class JoinAction(Action):
+        verb = 'join'
+
+
+    class LikeAction(Action):
+        verb = 'like'
+
+
+    class UserSequere(ModelBase):
+        identifier = 'user'
+
+        actions = (JoinAction, LikeAction, )
+
+
+    register(User, UserSequere)
+    register(Project, ProjectSequere)
+
+
+Now we have registered our actions we can play with the timeline API ::
+
+    In [1]: from sequere.models import (follow, unfollow)
+
+    In [2]: from sequere.contrib.timeline import Timeline
+
+    In [3]: from myapp.models import User, Project
+
+    In [4]: from myapp.sequere_registry import JoinAction, LikeAction
+
+    In [5]: thoas = User.objects.create(username='thoas')
+
+    In [6]: project = Project.objects.create(name'La classe americaine')
+
+    In [7]: timeline = Timeline(thoas)
+
+    In [8]: timeline.save(JoinAction(actor=thoas))
+
+    In [9]: timeline.get_private()
+    [<JoinAction: thoas join>]
+
+    In [10]: timeline.get_public()
+    [<JoinAction: thoas join>]
+
+When the resource is the actor of its own action then we push the action both
+in private and public timelines.
+
+Now we have to test the system with the follow process ::
+
+    In [11]: newbie = User.objects.create(username='newbie')
+
+    In [12]: follow(newbie, thoas)
+
+    In [13]: Timeline(newbie).get_private()
+    [<JoinAction: thoas join>]
+
+    In [14]: Timeline(newbie).get_public()
+    []
+
+When **A** is following **B** we copy the public timeline of **B** in the private
+timeline of **A**, ``celery`` is needed to handle these asynchronous tasks. ::
+
+    In [15]: unfollow(newbie, thoas)
+
+    In [16]: Timeline(newbie).get_private()
+    []
+
+When **A** is unfollowing **B** we delete the public timeline of **B** in the private
+timeline of **B**.
+
+
 Resources
 ---------
 
@@ -302,6 +400,7 @@ Resources
 
 
 .. _GitHub: https://github.com/thoas/django-sequere
+.. _celery: http://www.celeryproject.org/
 .. _Django Admin: https://docs.djangoproject.com/en/dev/ref/contrib/admin/
 .. _Sorted Sets: http://redis.io/commands#sorted_set
 .. _haplocheirus: https://github.com/twitter/haplocheirus

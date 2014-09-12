@@ -31,9 +31,12 @@ class RedisQuerySetTransformer(QuerySetTransformer):
         return self
 
     def transform(self, qs):
+        start = self.start or 0
+        stop = self.stop or -1
+
         scores = self.method(*self.pieces,
-                             start=self.start,
-                             num=self.stop - self.start,
+                             start=start,
+                             num=stop - start,
                              withscores=True)
 
         scores = OrderedDict(scores)

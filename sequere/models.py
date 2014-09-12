@@ -1,3 +1,5 @@
+import django
+
 from .backends import get_backend
 
 
@@ -37,6 +39,6 @@ def get_friends(instance, *args, **kwargs):
     return get_backend()().get_friends(instance, *args, **kwargs)
 
 
-from . import autodiscover
-
-autodiscover()
+if django.VERSION < (1, 7):
+    from . import autodiscover
+    autodiscover()

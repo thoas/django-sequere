@@ -1,5 +1,7 @@
 import six
 
+REPR_OUTPUT_SIZE = 20
+
 
 class QuerySetTransformer(object):
     def __init__(self, qs, count):
@@ -44,3 +46,9 @@ class QuerySetTransformer(object):
     def all(self):
         self.set_limits(0, self.count())
         return self.transform(self.qs)
+
+    def __repr__(self):
+        data = list(self[:REPR_OUTPUT_SIZE + 1])
+        if len(data) > REPR_OUTPUT_SIZE:
+            data[-1] = "...(remaining elements truncated)..."
+        return repr(data)
