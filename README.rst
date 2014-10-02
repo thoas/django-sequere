@@ -36,7 +36,9 @@ Installation
        pip install django-sequere
 
 
-2. Add ``sequere`` to your ``INSTALLED_APPS`` ::
+2. Add ``sequere`` to your ``INSTALLED_APPS``
+
+.. code-block:: python
 
        INSTALLED_APPS = (
            'sequere',
@@ -47,22 +49,26 @@ Usage
 
 In Sequere any resources can follow any resources and vice versa.
 
-Let's say you have two models: ::
+Let's say you have two models:
+
+.. code-block:: python
 
     # models.py
 
     from django.db import models
 
     class User(models.Model):
-        username = models.Charfield(max_length=150)
+        username = models.CharField(max_length=150)
 
 
     class Project(models.Model):
-        name = models.Charfield(max_length=150)
+        name = models.CharField(max_length=150)
 
 
 Now you to register them in sequere to identify them when a resource is following
-another one. ::
+another one.
+
+.. code-block:: python
 
     # sequere_registry.py
 
@@ -77,39 +83,43 @@ another one. ::
 Sequere uses the same concepts as `Django Admin`_, so if you have already used it,
 you will not be lost.
 
-You can now use Sequere like any other application, let's play with it: ::
+You can now use Sequere like any other application, let's play with it:
 
-    In [1]: from sequere.models import (follow, unfollow, get_followings_count, is_following,
+.. code-block:: python
+
+    >>> from sequere.models import (follow, unfollow, get_followings_count, is_following,
                                         get_followers_count, get_followers, get_followings)
 
-    In [2]: from myapp.models import User, Project
+    >>> from myapp.models import User, Project
 
-    In [3]: user = User.objects.create(username='thoas')
+    >>> user = User.objects.create(username='thoas')
 
-    In [4]: project = Project.objects.create(name='La classe americaine')
+    >>> project = Project.objects.create(name='La classe americaine')
 
-    In [5]: follow(user, project)  # thoas will now follow "La classe americaine"
+    >>> follow(user, project)  # thoas will now follow "La classe americaine"
 
-    In [6]: is_following(user, project)
+    >>> is_following(user, project)
     True
 
-    In [7]: get_followers_count(project)
+    >>> get_followers_count(project)
     1
 
-    In [8]: get_followings_count(user)
+    >>> get_followings_count(user)
     1
 
-    In [9]: get_followers(user)
+    >>> get_followers(user)
     []
 
-    In [10]: get_followers(project)
+    >>> get_followers(project)
     [(<User: thoas>, datetime.datetime(2013, 10, 25, 4, 41, 31, 612067))]
 
-    In [11]: get_followings(user)
+    >>> get_followings(user)
     [(<Project: La classe americaine, datetime.datetime(2013, 10, 25, 4, 41, 31, 612067))]
 
 
-If you are as lazy as me to provide the original instance in each sequere calls, use ``SequereMixin``::
+If you are as lazy as me to provide the original instance in each sequere calls, use ``SequereMixin``
+
+.. code-block:: python
 
     # models.py
 
@@ -123,32 +133,34 @@ If you are as lazy as me to provide the original instance in each sequere calls,
     class Project(SequereMixin, models.Model):
         name = models.Charfield(max_length=150)
 
-Now you can use calls directly from the instance: ::
+Now you can use calls directly from the instance:
 
-    In [1]: from myapp.models import User, Project
+.. code-block:: python
 
-    In [2]: user = User.objects.create(username='thoas')
+    >>> from myapp.models import User, Project
 
-    In [3]: project = Project.objects.create(name'La classe americaine')
+    >>> user = User.objects.create(username='thoas')
 
-    In [4]: user.follow(project)  # thoas will now follow "La classe americaine"
+    >>> project = Project.objects.create(name'La classe americaine')
 
-    In [5]: user.is_following(project)
+    >>> user.follow(project)  # thoas will now follow "La classe americaine"
+
+    >>> user.is_following(project)
     True
 
-    In [6]: project.get_followers_count()
+    >>> project.get_followers_count()
     1
 
-    In [7]: user.get_followings_count()
+    >>> user.get_followings_count()
     1
 
-    In [8]: user.get_followers()
+    >>> user.get_followers()
     []
 
-    In [9]: project.get_followers()
+    >>> project.get_followers()
     [(<User: thoas>, datetime.datetime(2013, 10, 25, 4, 41, 31, 612067))]
 
-    In [10]: user.get_followings()
+    >>> user.get_followings()
     [(<Project: La classe americaine, datetime.datetime(2013, 10, 25, 4, 41, 31, 612067))]
 
 
@@ -165,7 +177,9 @@ A database backend to store your follows in you favorite database using the Djan
 ORM.
 
 
-To use this backend you will have to add ``sequere.backends.database`` to your ``INSTALLED_APPS`` ::
+To use this backend you will have to add ``sequere.backends.database`` to your ``INSTALLED_APPS``
+
+.. code-block:: python
 
     INSTALLED_APPS = (
         'sequere',
@@ -176,7 +190,9 @@ The follower will be identified by the couple (from_identifier, from_object_id)
 and the following by (to_identifier, to_object_id).
 
 Each identifiers are taken from the registry. For example, if you want to create
-a custom identifier key from a model you can customized it like so: ::
+a custom identifier key from a model you can customized it like so:
+
+.. code-block:: python
 
     # sequere_registry.py
 
@@ -262,7 +278,9 @@ Installation
 You have to follow installation instructions of ``sequere`` first before installing
 ``sequere.contrib.timeline``.
 
-Add ``sequere.contrib.timeline`` to your ``INSTALLED_APPS`` ::
+Add ``sequere.contrib.timeline`` to your ``INSTALLED_APPS``
+
+.. code-block:: python
 
        INSTALLED_APPS = (
            'sequere.contrib.timeline',
@@ -274,7 +292,9 @@ so you will have to install it.
 Usage
 .....
 
-You have to register your actions based on your resources, for example ::
+You have to register your actions based on your resources, for example
+
+.. code-block:: python
 
     # sequere_registry.py
 
@@ -307,51 +327,57 @@ You have to register your actions based on your resources, for example ::
     register(Project, ProjectSequere)
 
 
-Now we have registered our actions we can play with the timeline API ::
+Now we have registered our actions we can play with the timeline API
 
-    In [1]: from sequere.models import (follow, unfollow)
+.. code-block:: python
 
-    In [2]: from sequere.contrib.timeline import Timeline
+    >>> from sequere.models import (follow, unfollow)
 
-    In [3]: from myapp.models import User, Project
+    >>> from sequere.contrib.timeline import Timeline
 
-    In [4]: from myapp.sequere_registry import JoinAction, LikeAction
+    >>> from myapp.models import User, Project
 
-    In [5]: thoas = User.objects.create(username='thoas')
+    >>> from myapp.sequere_registry import JoinAction, LikeAction
 
-    In [6]: project = Project.objects.create(name='La classe americaine')
+    >>> thoas = User.objects.create(username='thoas')
 
-    In [7]: timeline = Timeline(thoas) # create a timeline
+    >>> project = Project.objects.create(name='La classe americaine')
 
-    In [8]: timeline.save(JoinAction(actor=thoas)) # save the action in the timeline
+    >>> timeline = Timeline(thoas) # create a timeline
 
-    In [9]: timeline.get_private()
+    >>> timeline.save(JoinAction(actor=thoas)) # save the action in the timeline
+
+    >>> timeline.get_private()
     [<JoinAction: thoas join>]
 
-    In [10]: timeline.get_public()
+    >>>: timeline.get_public()
     [<JoinAction: thoas join>]
 
 When the resource is the actor of its own action then we push the action both
 in **private** and **public** timelines.
 
-Now we have to test the system with the follow process ::
+Now we have to test the system with the follow process
 
-    In [11]: newbie = User.objects.create(username='newbie')
+.. code-block:: python
 
-    In [12]: follow(newbie, thoas) # newbie is now following thoas
+    >>> newbie = User.objects.create(username='newbie')
 
-    In [13]: Timeline(newbie).get_private() # thoas actions now appear in the private timeline of newbie
+    >>> follow(newbie, thoas) # newbie is now following thoas
+
+    >>> Timeline(newbie).get_private() # thoas actions now appear in the private timeline of newbie
     [<JoinAction: thoas join>]
 
-    In [14]: Timeline(newbie).get_public()
+    >>> Timeline(newbie).get_public()
     []
 
 When **A** is following **B** we copy actions of **B** in the private
-timeline of **A**, `celery`_ is needed to handle these asynchronous tasks. ::
+timeline of **A**, `celery`_ is needed to handle these asynchronous tasks.
 
-    In [15]: unfollow(newbie, thoas)
+.. code-block:: python
 
-    In [16]: Timeline(newbie).get_private()
+    >>> unfollow(newbie, thoas)
+
+    >>> Timeline(newbie).get_private()
     []
 
 When **A** is unfollowing **B** we delete the actions of **B** in the private
@@ -359,19 +385,21 @@ timeline of **A**.
 
 As you may have noticed the ``JoinAction`` is an action which does not need a target,
 some actions will need target, ``sequere.contrib.timeline`` provides a quick way
-to query actions for a specific target. ::
+to query actions for a specific target.
 
-    In [17]: timeline = Timeline(thoas)
+.. code-block:: python
 
-    In [18]: timeline.save(LikeAction(actor=thoas, target=project))
+    >>> timeline = Timeline(thoas)
 
-    In [19]: timeline.get_private()
+    >>> timeline.save(LikeAction(actor=thoas, target=project))
+
+    >>> timeline.get_private()
     [<JoinAction: thoas join>, <LikeAction: thoas like La classe americaine>]
 
-    In [20]: timeline.get_private(target=Project) # only retrieve actions with Project resource as target
+    >>> timeline.get_private(target=Project) # only retrieve actions with Project resource as target
     [<LikeAction: thoas like La classe americaine>]
 
-    In [21]: timeline.get_private(target='project') # only retrieve actions with 'project' identifier as target
+    >>> timeline.get_private(target='project') # only retrieve actions with 'project' identifier as target
     [<LikeAction: thoas like La classe americaine>]
 
 Configuration
@@ -387,7 +415,9 @@ Defaults to ``sequere.backends.database.Databasebackend``.
 ``SEQUERE_REDIS_CONNECTION``
 ............................
 
-A dictionary of parameters to pass to the to Redis client, e.g.: ::
+A dictionary of parameters to pass to the to Redis client, e.g.:
+
+.. code-block:: python
 
     SEQUERE_REDIS_CONNECTION = {
         'host': 'localhost',
@@ -395,7 +425,9 @@ A dictionary of parameters to pass to the to Redis client, e.g.: ::
         'db': 0,
     }
 
-Alternatively you can use a URL to do the same: ::
+Alternatively you can use a URL to do the same:
+
+.. code-block:: python
 
     SEQUERE_REDIS_CONNECTION = 'redis://username:password@localhost:6379/0'
 
@@ -403,14 +435,18 @@ Alternatively you can use a URL to do the same: ::
 ``SEQUERE_REDIS_CONNECTION_CLASS``
 ..................................
 
-An (optional) dotted import path to a connection to use, e.g.: ::
+An (optional) dotted import path to a connection to use, e.g.:
+
+.. code-block:: python
 
     SEQUERE_REDIS_CONNECTION_CLASS = 'myproject.myapp.mockup.Connection'
 
 ``SEQUERE_REDIS_PREFIX``
 ........................
 
-The (optional) prefix to be used for the key when storing in the Redis database. ::
+The (optional) prefix to be used for the key when storing in the Redis database.
+
+.. code-block:: python
 
     SEQUERE_REDIS_PREFIX = 'sequere:myproject:'
 
@@ -419,14 +455,18 @@ Defaults to ``sequere:``.
 ``SEQUERE_TIMELINE_CONNECTION_CLASS``
 .....................................
 
-An (optional) dotted import path to a connection to use, e.g.: ::
+An (optional) dotted import path to a connection to use, e.g.:
+
+.. code-block:: python
 
     SEQUERE_TIMELINE_CONNECTION_CLASS = 'myproject.myapp.mockup.Connection'
 
 ``SEQUERE_TIMELINE_REDIS_CONNECTION``
 .....................................
 
-A dictionary of parameters to pass to the to Redis client, e.g.: ::
+A dictionary of parameters to pass to the to Redis client, e.g.:
+
+.. code-block:: python
 
     SEQUERE_TIMELINE_REDIS_CONNECTION = {
         'host': 'localhost',
@@ -434,14 +474,18 @@ A dictionary of parameters to pass to the to Redis client, e.g.: ::
         'db': 0,
     }
 
-Alternatively you can use a URL to do the same: ::
+Alternatively you can use a URL to do the same:
+
+.. code-block:: python
 
     SEQUERE_TIMELINE_REDIS_CONNECTION = 'redis://username:password@localhost:6379/0'
 
 ``SEQUERE_TIMELINE_REDIS_PREFIX``
 .................................
 
-The (optional) prefix to be used for the key when storing in the Redis database. ::
+The (optional) prefix to be used for the key when storing in the Redis database.
+
+.. code-block:: python
 
     SEQUERE_TIMELINE_REDIS_PREFIX = 'sequere:myproject:timeline'
 
@@ -450,7 +494,9 @@ Defaults to ``sequere:timeline``.
 ``SEQUERE_TIMELINE_NYDUS_CONNECTION``
 .....................................
 
-`nydus`_ can be used to scale like a pro. ::
+`nydus`_ can be used to scale like a pro.
+
+.. code-block:: python
 
     SEQUERE_TIMELINE_NYDUS_CONNECTION = {
         'backend': 'nydus.db.backends.redis.Redis',
