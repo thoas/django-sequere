@@ -12,7 +12,7 @@ with open(os.path.join(root, 'README.rst')) as f:
 setup(
     name='django-sequere',
     version=version,
-    description='A generic application to follow a resource with multiple backends',
+    description='A Django application to implement a follow system and a timeline using multiple backends (db, redis, etc.)',
     long_description=README,
     author='Florent Messa',
     author_email='florent.messa@gmail.com',
