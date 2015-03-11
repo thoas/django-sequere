@@ -5,9 +5,9 @@ django-sequere
     :alt: Build Status
     :target: http://travis-ci.org/thoas/django-sequere
 
-A generic application to follow a resource with multiple backends (db, redis, etc.).
+A Django application to implement a follow system and a timeline using multiple backends (db, redis, etc.).
 
-A timeline engine can be also found in ``sequere.contrib.timeline``.
+The timeline engine can be found in ``sequere.contrib.timeline``.
 
 Compatibility
 -------------
