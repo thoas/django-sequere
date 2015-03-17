@@ -410,7 +410,7 @@ Configuration
 
 The backend used to store follows
 
-Defaults to ``sequere.backends.database.Databasebackend``.
+Defaults to ``sequere.backends.database.DatabaseBackend``.
 
 ``SEQUERE_REDIS_CONNECTION``
 ............................
