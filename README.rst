@@ -302,7 +302,7 @@ You have to register your actions based on your resources, for example
 
     from sequere.contrib.timeline import Action
     from sequere import register
-    from sequere.base import Modelbase
+    from sequere.base import ModelBase
 
 
     # actions
