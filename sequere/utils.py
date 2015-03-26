@@ -97,7 +97,7 @@ def get_client(connection, connection_class=None):
             raise ImproperlyConfigured(
                 "The Redis backend requires redis-py to be installed.")
         if isinstance(connection, six.string_types):
-            client = redis.from_url(connection)
+            client = redis.from_url(connection, decode_responses=True)
         else:
             # see https://github.com/andymccurdy/redis-py/issues/463#issuecomment-41229918
             connection['decode_responses'] = True

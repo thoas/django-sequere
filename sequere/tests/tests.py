@@ -206,16 +206,6 @@ class DatabaseBackendTests(BaseBackendTests, TestCase):
 
 
 @mock.patch.object(settings, 'BACKEND_CLASS', 'sequere.backends.redis.RedisBackend')
-class RedisBackendTests(BaseBackendTests, TestCase):
-    def setUp(self):
-        super(RedisBackendTests, self).setUp()
-
-        from sequere.backends.redis.connection import client
-
-        client.flushdb()
-
-
-@mock.patch.object(settings, 'BACKEND_CLASS', 'sequere.backends.redis.RedisBackend')
 class TimelineTests(FixturesMixin, TestCase):
     def setUp(self):
         super(TimelineTests, self).setUp()
@@ -358,4 +348,9 @@ class TimelineTests(FixturesMixin, TestCase):
     }
 })
 class NydusTimelineTests(TimelineTests):
+    pass
+
+
+@override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.redis.RedisBackend', TIMELINE_CONNECTION='redis://redis:6379/0')
+class RedisUrlTimelineTests(TimelineTests):
     pass
