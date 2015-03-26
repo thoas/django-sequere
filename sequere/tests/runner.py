@@ -1,5 +1,9 @@
 from django.conf import settings
-from django.test.simple import DjangoTestSuiteRunner as BaseDjangoTestSuiteRunner
+
+try:
+    from django.test.runner import DiscoverRunner as BaseDjangoTestSuiteRunner
+except ImportError:
+    from django.test.simple import DjangoTestSuiteRunner as BaseDjangoTestSuiteRunner
 
 
 class DjangoTestSuiteRunner(BaseDjangoTestSuiteRunner):

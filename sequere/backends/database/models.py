@@ -1,3 +1,5 @@
+import django
+
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.db.models.query import QuerySet
@@ -21,14 +23,17 @@ class FollowQuerySet(QuerySet):
 
 
 class FollowManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return FollowQuerySet(self.model)
 
+    if django.VERSION < (1, 6):
+        get_query_set = get_queryset
+
     def from_instance(self, instance):
-        return self.get_query_set().from_instance(instance)
+        return self.get_queryset().from_instance(instance)
 
     def to_instance(self, instance):
-        return self.get_query_set().to_instance(instance)
+        return self.get_queryset().to_instance(instance)
 
 
 @python_2_unicode_compatible
