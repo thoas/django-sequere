@@ -1,3 +1,5 @@
+import six
+
 from collections import defaultdict
 
 from sequere.registry import registry
@@ -18,12 +20,16 @@ class Manager(object):
 
         data['uid'] = uid
 
-        self.client.hmset(self.add_prefix(get_key('uid', uid)), data)
+        key = self.add_prefix(get_key('uid', uid))
+
+        self.client.hmset(key, data)
 
         return uid
 
     def get_data_from_uid(self, uid):
-        return self.client.hgetall(self.add_prefix(get_key('uid', uid)))
+        key = self.add_prefix(get_key('uid', uid))
+
+        return self.client.hgetall(key)
 
     def clear(self):
         self.client.flushdb()
@@ -64,7 +70,7 @@ class InstanceManager(Manager):
             for i, value in enumerate(results):
                 identifier_ids[value['identifier']][int(value['object_id'])] = None
 
-            for identifier, objects in identifier_ids.iteritems():
+            for identifier, objects in six.iteritems(identifier_ids):
                 klass = registry.identifiers.get(identifier)
 
                 for result in klass.objects.filter(pk__in=objects.keys()):
@@ -76,7 +82,7 @@ class InstanceManager(Manager):
             return results
 
     def get_from_uid(self, uid):
-        data = self.get_data_from_uid(uid)
+        data = self.get_data_from_uid(int(uid))
 
         klass = registry.identifiers.get(data['identifier'])
 

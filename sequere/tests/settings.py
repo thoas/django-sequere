@@ -1,3 +1,5 @@
+import django
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -30,7 +32,8 @@ SECRET_KEY = 'blabla'
 
 ROOT_URLCONF = 'sequere.tests.urls'
 
-TEST_RUNNER = 'sequere.tests.runner.DjangoTestSuiteRunner'
+if django.VERSION <= (1, 6):
+    TEST_RUNNER = 'discover_runner.DiscoverRunner'
 
 BROKER_BACKEND = 'memory'
 

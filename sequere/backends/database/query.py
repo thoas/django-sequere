@@ -4,6 +4,8 @@ from operator import itemgetter
 from sequere.query import QuerySetTransformer
 from sequere.registry import registry
 
+import six
+
 
 class DatabaseQuerySetTransformer(QuerySetTransformer):
     def __init__(self, qs, count):
@@ -49,7 +51,7 @@ class DatabaseQuerySetTransformer(QuerySetTransformer):
             identifier_ids[value[self.aggregate_key]].append(value[self.pivot_key])
             orders[value[self.pivot_key]] = value[self.sorting_key]
 
-        for identifier, ids in identifier_ids.iteritems():
+        for identifier, ids in six.iteritems(identifier_ids):
             model = registry.identifiers.get(identifier)
 
             results = model.objects.filter(pk__in=ids)

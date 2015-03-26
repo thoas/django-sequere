@@ -99,6 +99,9 @@ def get_client(connection, connection_class=None):
         if isinstance(connection, six.string_types):
             client = redis.from_url(connection)
         else:
-            client = redis.Redis(**connection)
+            # see https://github.com/andymccurdy/redis-py/issues/463#issuecomment-41229918
+            connection['decode_responses'] = True
+
+            client = redis.StrictRedis(**connection)
 
     return client
