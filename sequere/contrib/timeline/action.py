@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from django.utils.functional import memoize, cached_property
+from django.utils.functional import cached_property
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils import six
 from django.utils.encoding import force_str
@@ -19,7 +19,14 @@ def _get_actions():
                 for action in getattr(model_class, 'actions', []))
 
 
-get_actions = memoize(_get_actions, {}, 0)
+try:
+    from django.utils.lru_cache import lru_cache
+
+    get_actions = lru_cache()(_get_actions)
+except ImportError:
+    from django.utils.functional import memoize
+
+    get_actions = memoize(_get_actions, {}, 0)
 
 
 @python_2_unicode_compatible

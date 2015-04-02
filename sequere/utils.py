@@ -4,9 +4,14 @@ from datetime import datetime
 import six
 import time
 
+
+try:
+    from importlib import import_module
+except ImportError:
+    from django.utils.importlib import import_module  # noqa
+
 from django.core import exceptions
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.importlib import import_module
 from django.conf import settings
 from django.utils import timezone
 
