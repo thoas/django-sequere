@@ -11,7 +11,7 @@ nydus_connection = settings.TIMELINE_NYDUS_CONNECTION
 if nydus_connection:
     try:
         from nydus.db import create_cluster
-    except ImportError:
+    except ImportError as e:
         raise ImproperlyConfigured(
             "The nydus backend requires nydus to be installed.")
     else:
