@@ -6,13 +6,14 @@ from sequere.registry import registry
 from sequere.signals import followed, unfollowed
 
 from .query import DatabaseQuerySetTransformer
-from .models import Follow
 
 
 class DatabaseBackend(BaseBackend):
-    model = Follow
-
     def __init__(self, *args, **kwargs):
+        from .models import Follow
+
+        self.model = Follow
+
         if not self.model._meta.installed:
             raise ImproperlyConfigured(
                 "The sequere.backends.database app isn't installed "

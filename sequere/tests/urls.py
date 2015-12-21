@@ -1,8 +1,7 @@
-from django.conf.urls import patterns, include
+from django.conf.urls import include, url
 
 
-urlpatterns = patterns(
-    '',
-    (r'^', include('sequere.urls')),
-    (r'^', include('sequere.contrib.user.urls')),
-)
+urlpatterns = [
+    url(r'^', include('sequere.urls')),
+    url(r'^', include('sequere.contrib.user.urls')),
+]

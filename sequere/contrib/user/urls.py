@@ -1,10 +1,9 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from .views import FollowView, UnFollowView
 
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url('^follow/',
         FollowView.as_view(),
         name='sequere_follow'),
@@ -12,4 +11,4 @@ urlpatterns = patterns(
     url('^unfollow/',
         UnFollowView.as_view(),
         name='sequere_unfollow')
-)
+]
