@@ -3,6 +3,9 @@ from sequere.contrib.timeline.action import Action
 
 from sequere.backends.redis.utils import get_key
 
+from .exceptions import ActionInvalid
+from .utils import logger
+
 
 class TimelineQuerySetTransformer(QuerySetTransformer):
     def __init__(self, client, count, key, prefix=None):
@@ -59,5 +62,17 @@ class NydusTimelineQuerySetTransformer(TimelineQuerySetTransformer):
             for uid, score in scores:
                 results.append(pipe.hgetall(get_key(self.prefix, 'uid', uid)))
 
-        return [Action.from_data(data)
-                for data in results if data]
+        actions = []
+
+        for data in results:
+            if not data:
+                continue
+
+            try:
+                action = Action.from_data(data)
+            except ActionInvalid as e:
+                logger.exception(e)
+            else:
+                actions.append(action)
+
+        return actions

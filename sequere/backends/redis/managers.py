@@ -84,6 +84,9 @@ class InstanceManager(Manager):
     def get_from_uid(self, uid):
         data = self.get_data_from_uid(int(uid))
 
+        if not data:
+            return None
+
         klass = registry.identifiers.get(data['identifier'])
 
         try:

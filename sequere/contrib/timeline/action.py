@@ -10,7 +10,7 @@ from sequere.utils import to_timestamp, from_timestamp
 from sequere.registry import registry
 from sequere.backends.redis.connection import manager as backend
 
-from .exceptions import ActionDoesNotExist
+from .exceptions import ActionDoesNotExist, ActionInvalid
 
 
 def _get_actions():
@@ -100,7 +100,12 @@ class Action(object):
 
         for attr_name in ('actor', 'target', ):
             if data.get(attr_name, None):
-                data[attr_name] = backend.get_from_uid(data[attr_name])
+                result = backend.get_from_uid(data[attr_name])
+
+                if result is None:
+                    raise ActionInvalid(data=data)
+
+                data[attr_name] = result
             else:
                 data[attr_name] = None
 
