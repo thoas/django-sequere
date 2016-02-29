@@ -94,7 +94,7 @@ def to_timestamp(dt):
 
 def get_client(connection, connection_class=None):
     if connection_class:
-        client = load_class(connection_class)()
+        client = load_class(connection_class)(**connection)
     else:
         try:
             import redis
