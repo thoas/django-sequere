@@ -1,4 +1,5 @@
 import six
+import uuid
 
 from collections import defaultdict
 
@@ -15,14 +16,16 @@ class Manager(object):
     def add_prefix(self, key):
         return get_key(self.prefix, key)
 
-    def make_uid(self, data):
-        uid = self.client.incr(self.add_prefix(get_key('global', 'uid')))
+    def make_uid(self, data, client=None):
+        client = client or self.client
+
+        uid = str(uuid.uuid4()).replace('-', '')
 
         data['uid'] = uid
 
         key = self.add_prefix(get_key('uid', uid))
 
-        self.client.hmset(key, data)
+        client.hmset(key, data)
 
         return uid
 
@@ -42,12 +45,14 @@ class InstanceManager(Manager):
         if not uid:
             identifier = registry.get_identifier(instance)
 
-            uid = super(InstanceManager, self).make_uid({
-                'identifier': identifier,
-                'object_id': instance.pk
-            })
+            with self.client.pipeline() as pipe:
+                uid = super(InstanceManager, self).make_uid(data={
+                    'identifier': identifier,
+                    'object_id': instance.pk
+                }, client=pipe)
 
-            self.client.set(self.make_uid_key(instance), uid)
+                pipe.set(self.make_uid_key(instance), uid)
+                pipe.execute()
 
         return uid
 
@@ -82,7 +87,7 @@ class InstanceManager(Manager):
             return results
 
     def get_from_uid(self, uid):
-        data = self.get_data_from_uid(int(uid))
+        data = self.get_data_from_uid(uid)
 
         if not data:
             return None
