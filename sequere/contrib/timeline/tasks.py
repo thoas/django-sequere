@@ -6,11 +6,12 @@ from celery.task import task
 
 
 @task
-def dispatch_action(uid, data, dispatch=True):
+def dispatch_action(uid, action_uid, dispatch=True):
     from sequere.backends.redis.connection import manager
     from sequere.models import get_followers
+    from sequere.contrib.timeline.backends.backend import backend
 
-    from . import Timeline, Action
+    from . import Timeline
 
     logger = dispatch_action.get_logger()
 
@@ -19,7 +20,7 @@ def dispatch_action(uid, data, dispatch=True):
     if not instance:
         logger.error('No instance found for uid: %s' % uid)
     else:
-        action = Action.from_data(data)
+        action = backend.get_action(action_uid)
 
         paginator = Paginator(get_followers(instance), 10)
 

@@ -1,3 +1,5 @@
+from django.utils.module_loading import autodiscover_modules
+
 from .base import ModelBase
 
 
@@ -114,12 +116,7 @@ registry = SequereRegistry()
 
 
 def autodiscover():
-    import django
-    if django.VERSION >= (1, 7):
-        from django.utils.module_loading import autodiscover_modules
-        autodiscover_modules('sequere_registry')
-    else:
-        _autodiscover(registry)
+    autodiscover_modules('sequere_registry')
 
 
 def register(*args, **kwargs):

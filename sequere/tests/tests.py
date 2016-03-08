@@ -192,7 +192,7 @@ class BaseBackendTests(FixturesMixin):
         self.assertEqual(content['%s_followings_count' % identifier], 0)
 
 
-@mock.patch.object(settings, 'BACKEND_CLASS', 'sequere.backends.database.DatabaseBackend')
+@mock.patch.object(settings, 'BACKEND', 'sequere.backends.database.DatabaseBackend')
 class DatabaseBackendTests(BaseBackendTests, TestCase):
     def test_from_instance_and_to_instance(self):
         from ..models import follow
@@ -205,14 +205,14 @@ class DatabaseBackendTests(BaseBackendTests, TestCase):
         self.assertEqual(instance.from_instance, self.user)
 
 
-@mock.patch.object(settings, 'BACKEND_CLASS', 'sequere.backends.redis.RedisBackend')
+@mock.patch.object(settings, 'BACKEND', 'sequere.backends.redis.RedisBackend')
 class TimelineTests(FixturesMixin, TestCase):
     def setUp(self):
         super(TimelineTests, self).setUp()
 
-        from sequere.backends.redis.connection import client
+        from sequere.backends.backend import backend
 
-        client.flushall()
+        backend.clear()
 
     def test_simple_timeline(self):
         from .sequere_registry import JoinAction, User
@@ -338,6 +338,6 @@ class TimelineTests(FixturesMixin, TestCase):
         self.assertEqual(timeline.get_unread_count(), 0)
 
 
-@override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.redis.RedisBackend', TIMELINE_CONNECTION='redis://redis:6379/0')
+@override_settings(SEQUERE_BACKEND='sequere.backends.redis.RedisBackend', TIMELINE_CONNECTION='redis://redis:6379/0')
 class RedisUrlTimelineTests(TimelineTests):
     pass

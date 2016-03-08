@@ -1,7 +1,4 @@
-try:
-    from collections import OrderedDict
-except ImportError:
-    from django.utils.datastructures import SortedDict as OrderedDict
+from collections import OrderedDict
 
 from sequere.query import QuerySetTransformer
 from sequere import utils

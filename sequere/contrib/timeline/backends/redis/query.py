@@ -1,10 +1,10 @@
 from sequere.query import QuerySetTransformer
-from sequere.contrib.timeline.action import Action
 
 from sequere.backends.redis.utils import get_key
 
-from .exceptions import ActionInvalid
-from .utils import logger
+from sequere.contrib.timeline.action import Action
+from sequere.contrib.timeline.exceptions import ActionInvalid
+from sequere.contrib.timeline.utils import logger
 
 
 class TimelineQuerySetTransformer(QuerySetTransformer):

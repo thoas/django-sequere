@@ -1,6 +1,6 @@
 from django.views import generic
 from django.utils.decorators import method_decorator
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 
@@ -10,8 +10,6 @@ from sequere.models import (get_followers_count,
                             follow,
                             unfollow,
                             get_followings_count)
-
-from sequere.http import JSONResponse
 
 
 class BaseFollowView(generic.View):
@@ -64,7 +62,7 @@ class BaseFollowView(generic.View):
             '%s_followings_count' % self.identifier: get_followings_count(self.request.user, self.identifier),
         }
 
-        return JSONResponse(data)
+        return JsonResponse(data)
 
     def success(self, instance):
         raise NotImplementedError

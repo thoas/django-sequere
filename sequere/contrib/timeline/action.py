@@ -1,32 +1,19 @@
 from __future__ import unicode_literals
 
-from django.utils.functional import cached_property
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils import six
 from django.utils.encoding import force_str
 from django.utils import timezone as datetime
+from django.utils.lru_cache import lru_cache
 
-from sequere.utils import to_timestamp, from_timestamp
 from sequere.registry import registry
-from sequere.backends.redis.connection import manager as backend
-
-from .exceptions import ActionDoesNotExist, ActionInvalid
 
 
-def _get_actions():
+@lru_cache()
+def get_actions():
     return dict((action.verb, action)
                 for model_class in registry.values()
                 for action in getattr(model_class, 'actions', []))
-
-
-try:
-    from django.utils.lru_cache import lru_cache
-
-    get_actions = lru_cache()(_get_actions)
-except ImportError:
-    from django.utils.functional import memoize
-
-    get_actions = memoize(_get_actions, {}, 0)
 
 
 @python_2_unicode_compatible
@@ -44,36 +31,6 @@ class Action(object):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    @cached_property
-    def actor_uid(self):
-        return backend.make_uid(self.actor)
-
-    @cached_property
-    def target_uid(self):
-        if self.target:
-            return backend.make_uid(self.target)
-
-        return None
-
-    @property
-    def timestamp(self):
-        return to_timestamp(self.date)
-
-    def format_data(self):
-        result = {
-            'actor': self.actor_uid,
-            'verb': self.verb,
-        }
-
-        result['timestamp'] = self.timestamp
-
-        if self.target:
-            result['target'] = self.target_uid
-
-        self.data = result
-
-        return result
-
     def __str__(self):
         if not self.target:
             return '%s %s' % (self.actor, self.verb)
@@ -86,29 +43,3 @@ class Action(object):
         except (UnicodeEncodeError, UnicodeDecodeError):
             u = '[Bad Unicode data]'
         return force_str('<%s: %s>' % (self.__class__.__name__, u))
-
-    @classmethod
-    def from_data(cls, data):
-        verb = data['verb']
-
-        actions = get_actions()
-
-        action_class = actions.get(verb, None)
-
-        if action_class is None:
-            raise ActionDoesNotExist('Action %s does not exist' % verb)
-
-        for attr_name in ('actor', 'target', ):
-            if data.get(attr_name, None):
-                result = backend.get_from_uid(data[attr_name])
-
-                if result is None:
-                    raise ActionInvalid(data=data)
-
-                data[attr_name] = result
-            else:
-                data[attr_name] = None
-
-        data['date'] = from_timestamp(float(data.pop('timestamp')))
-
-        return action_class(**data)
