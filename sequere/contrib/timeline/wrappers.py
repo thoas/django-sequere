@@ -1,4 +1,4 @@
-from .query import RedisTimelineQuerySetTransformer, NydusTimelineQuerySetTransformer
+from .query import RedisTimelineQuerySetTransformer
 
 
 class CallProxy(object):
@@ -40,7 +40,3 @@ class RedisWrapper(Wrapper):
 
     def map(self, *args, **kwargs):
         return PipelineContextManager(self.client.pipeline(), *args, **kwargs)
-
-
-class NydusWrapper(Wrapper):
-    queryset_class = NydusTimelineQuerySetTransformer

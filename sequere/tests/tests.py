@@ -338,19 +338,6 @@ class TimelineTests(FixturesMixin, TestCase):
         self.assertEqual(timeline.get_unread_count(), 0)
 
 
-@override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.redis.RedisBackend', SEQUERE_TIMELINE_NYDUS_CONNECTION={
-    'backend': 'nydus.db.backends.redis.Redis',
-    'router': 'nydus.db.routers.keyvalue.PartitionRouter',
-    'hosts': {
-        0: {'db': 0},
-        1: {'db': 1},
-        2: {'db': 2},
-    }
-})
-class NydusTimelineTests(TimelineTests):
-    pass
-
-
 @override_settings(SEQUERE_BACKEND_CLASS='sequere.backends.redis.RedisBackend', TIMELINE_CONNECTION='redis://redis:6379/0')
 class RedisUrlTimelineTests(TimelineTests):
     pass

@@ -46,33 +46,23 @@ class TimelineQuerySetTransformer(QuerySetTransformer):
 
 class RedisTimelineQuerySetTransformer(TimelineQuerySetTransformer):
     def _transform(self, scores):
-        with self.qs.map() as pipe:
+        with self.qs.pipeline() as pipe:
             for uid, score in scores:
                 pipe.hgetall(get_key(self.prefix, 'uid', uid))
 
-            return [Action.from_data(data)
-                    for data in pipe.execute()]
+            results = pipe.execute()
 
+            actions = []
 
-class NydusTimelineQuerySetTransformer(TimelineQuerySetTransformer):
-    def _transform(self, scores):
-        results = []
+            for data in results:
+                if not data:
+                    continue
 
-        with self.qs.map() as pipe:
-            for uid, score in scores:
-                results.append(pipe.hgetall(get_key(self.prefix, 'uid', uid)))
+                try:
+                    action = Action.from_data(data)
+                except ActionInvalid as e:
+                    logger.exception(e)
+                else:
+                    actions.append(action)
 
-        actions = []
-
-        for data in results:
-            if not data:
-                continue
-
-            try:
-                action = Action.from_data(data)
-            except ActionInvalid as e:
-                logger.exception(e)
-            else:
-                actions.append(action)
-
-        return actions
+            return actions

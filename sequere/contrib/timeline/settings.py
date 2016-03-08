@@ -14,5 +14,3 @@ TIMELINE_REMOVE_ACTIONS_ON_UNFOLLOW = getattr(settings, 'SEQUERE_IMPORT_ACTIONS_
 TIMELINE_PREFIX = getattr(settings,
                           'SEQUERE_TIMELINE_REDIS_PREFIX',
                           '%stimeline:' % getattr(settings, 'SEQUERE_REDIS_PREFIX', 'sequere:'))
-
-TIMELINE_NYDUS_CONNECTION = getattr(settings, 'SEQUERE_TIMELINE_NYDUS_CONNECTION', None)

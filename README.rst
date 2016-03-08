@@ -472,28 +472,6 @@ The (optional) prefix to be used for the key when storing in the Redis database.
 
 Defaults to ``sequere:timeline``.
 
-``SEQUERE_TIMELINE_NYDUS_CONNECTION``
-.....................................
-
-`nydus`_ can be used to scale like a pro.
-
-.. code-block:: python
-
-    SEQUERE_TIMELINE_NYDUS_CONNECTION = {
-        'backend': 'nydus.db.backends.redis.Redis',
-        'router': 'nydus.db.routers.keyvalue.PartitionRouter',
-        'hosts': {
-            0: {'db': 0},
-            1: {'db': 1},
-            2: {'db': 2},
-        }
-    }
-
-``sequere.contrib.timeline`` supports both `redis-py`_ and `nydus`_.
-
-If this settings is provided in your Django project then `nydus`_ will be needed
-as an additional dependency.
-
 
 Resources
 ---------
@@ -505,7 +483,6 @@ Resources
 
 
 .. _GitHub: https://github.com/thoas/django-sequere
-.. _nydus: https://github.com/disqus/nydus
 .. _redis-py: https://github.com/andymccurdy/redis-py
 .. _celery: http://www.celeryproject.org/
 .. _Django Admin: https://docs.djangoproject.com/en/dev/ref/contrib/admin/
