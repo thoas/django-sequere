@@ -14,6 +14,8 @@ from exam.cases import Exam
 
 from .models import Project
 
+from sequere import app
+from sequere.backends.redis import RedisBackend
 from sequere.registry import registry
 from sequere.backends.database.models import Follow
 
@@ -204,8 +206,7 @@ class DatabaseBackendTests(BaseBackendTests, TestCase):
         self.assertEqual(instance.from_instance, self.user)
 
 
-@override_settings(SEQUERE_BACKEND='sequere.backends.redis.RedisBackend',
-                   SEQUERE_TIMELINE_IMPORT_ACTIONS_ON_FOLLOW=True,
+@override_settings(SEQUERE_TIMELINE_IMPORT_ACTIONS_ON_FOLLOW=True,
                    SEQUERE_TIMELINE_REMOVE_ACTIONS_ON_UNFOLLOW=True,
                    INSTALLED_APPS=settings.INSTALLED_APPS + ['sequere.contrib.timeline', ],
                    SEQUERE_TIMELINE_BACKEND='sequere.contrib.timeline.backends.redis.RedisBackend')
@@ -213,10 +214,8 @@ class TimelineTests(FixturesMixin, TestCase):
     def setUp(self):
         super(TimelineTests, self).setUp()
 
-        from sequere.backends import backend
-
-        backend.backend = backend.get_backend()
-        backend.backend.clear()
+        app.backend = RedisBackend()
+        app.backend.clear()
 
     def test_simple_timeline(self):
         from .sequere_registry import JoinAction, User

@@ -6,11 +6,11 @@ from .tasks import dispatch_action
 
 class Timeline(object):
     def __init__(self, instance, *args, **kwargs):
-        from .backends.backend import backend
+        from . import app
 
         self.instance = instance
 
-        self.backend = kwargs.pop('backend', backend)
+        self.backend = kwargs.pop('backend', app.backend)
 
     def mark_as_read(self, timestamp=None):
         if timestamp is None:

@@ -23,7 +23,7 @@ FAIL_SILENTLY = get_setting('FAIL_SILENTLY')
 class RedisBackend(BaseBackend):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('client_class', 'redis.StrictRedis')
-        kwargs.setdefault('options', {})
+        kwargs.setdefault('options', {'decode_responses': True})
         kwargs.setdefault('prefix', 'sequere')
         kwargs.setdefault('key_separator', ':')
 

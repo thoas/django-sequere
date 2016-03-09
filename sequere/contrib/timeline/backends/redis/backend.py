@@ -7,7 +7,7 @@ from sequere.registry import registry
 from sequere.utils import get_client
 from sequere.backends.redis.managers import Manager
 from sequere.backends.redis.utils import get_key
-from sequere.backends.backend import backend
+from sequere import app
 from sequere.utils import to_timestamp, from_timestamp
 from sequere.contrib.timeline.action import Action, get_actions
 from sequere.contrib.timeline.exceptions import ActionDoesNotExist, ActionInvalid
@@ -20,7 +20,7 @@ class RedisBackend(object):
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('client_class', 'redis.StrictRedis')
-        kwargs.setdefault('options', {})
+        kwargs.setdefault('options', {'decode_responses': True})
         kwargs.setdefault('prefix', 'sequere:timeline:')
 
         self.client = get_client(kwargs['options'], connection_class=kwargs['client_class'])
@@ -30,7 +30,7 @@ class RedisBackend(object):
     def _make_key(self, instance, name, action=None, target=None):
         segments = [
             self.storage.add_prefix('uid'),
-            backend.get_uid(instance),
+            app.backend.get_uid(instance),
             name,
         ]
 
@@ -57,7 +57,7 @@ class RedisBackend(object):
 
         prefix = self.storage.add_prefix('uid')
 
-        uid = backend.get_uid(instance)
+        uid = app.backend.get_uid(instance)
 
         keys = [
             get_key(prefix, uid, 'private'),
@@ -93,7 +93,7 @@ class RedisBackend(object):
 
         for attr_name in ('actor', 'target', ):
             if data.get(attr_name, None):
-                result = backend.get_from_uid(data[attr_name])
+                result = app.backend.get_from_uid(data[attr_name])
 
                 if result is None:
                     raise ActionInvalid(data=data)
@@ -111,7 +111,7 @@ class RedisBackend(object):
 
     def _save(self, action):
         result = {
-            'actor': backend.get_uid(action.actor),
+            'actor': app.backend.get_uid(action.actor),
             'verb': action.verb,
         }
 
@@ -120,7 +120,7 @@ class RedisBackend(object):
         result['timestamp'] = timestamp
 
         if action.target:
-            result['target'] = backend.get_uid(action.target)
+            result['target'] = app.backend.get_uid(action.target)
 
         uid = self.storage.make_uid(result)
 
@@ -170,7 +170,7 @@ class RedisBackend(object):
     def get_read_key(self, instance):
         segments = [
             self.storage.add_prefix('uid'),
-            backend.get_uid(instance),
+            app.backend.get_uid(instance),
             'read_at'
         ]
 

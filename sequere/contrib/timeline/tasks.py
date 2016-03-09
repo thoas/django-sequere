@@ -8,13 +8,13 @@ from celery.task import task
 @task
 def dispatch_action(action_uid, dispatch=True):
     from sequere.models import get_followers
-    from sequere.contrib.timeline.backends.backend import backend
+    from sequere.contrib.timeline import app
 
     from . import Timeline
 
     logger = dispatch_action.get_logger()
 
-    action = backend.get_action(action_uid)
+    action = app.backend.get_action(action_uid)
 
     paginator = Paginator(get_followers(action.actor), 10)
 
@@ -32,13 +32,13 @@ def dispatch_action(action_uid, dispatch=True):
 
 
 def populate_actions(from_uid, to_uid, method, logger=None):
-    from sequere.backends.backend import backend
+    from sequere import app
 
     from . import Timeline
 
-    from_instance = backend.get_from_uid(from_uid)
+    from_instance = app.backend.get_from_uid(from_uid)
 
-    to_instance = backend.get_from_uid(to_uid)
+    to_instance = app.backend.get_from_uid(to_uid)
 
     paginator = Paginator(Timeline(from_instance).get_public(), 10)
 
