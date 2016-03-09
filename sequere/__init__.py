@@ -1,8 +1,8 @@
-version = (0, 3, 0)
+version = (0, 4, 0)
 
 __version__ = '.'.join(map(str, version))
 
-from .registry import register, autodiscover
+from .registry import register, autodiscover  # noqa
 
 
 __all__ = ['register', 'autodiscover']
