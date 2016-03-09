@@ -1,3 +1,5 @@
+import json
+
 from .celery import app as celery_app  # noqa
 
 from django.test.utils import override_settings
@@ -13,7 +15,6 @@ from exam.cases import Exam
 from .models import Project
 
 from sequere.registry import registry
-from sequere.http import json
 from sequere.backends.database.models import Follow
 
 
