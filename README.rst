@@ -415,6 +415,35 @@ The (optional) prefix to be used for the key when storing in the Redis database.
 
 Defaults to ``sequere:``.
 
+``SEQUERE_TIMELINE_BACKEND``
+............................
+
+The backend used to store follows
+
+Defaults to ``sequere.contrib.timeline.redis.RedisBackend``.
+
+``SEQUERE_TIMELINE_BACKEND_OPTIONS``
+....................................
+
+A dictionary of parameters to pass to the backend, for example with redis:
+
+.. code-block:: python
+
+    SEQUERE_TIMELINE_BACKEND = 'sequere.contrib.timeline.redis.RedisBackend'
+    SEQUERE_TIMELINE_BACKEND_OPTIONS = {
+        'client_class': 'myproject.myapp.mockup.Connection',
+        'options': {
+            'host': 'localhost',
+            'port': 6379,
+            'db': 0,
+        },
+        'prefix': 'prefix-used:'
+    }
+
+The (optional) prefix to be used for the key when storing in the Redis database.
+
+Defaults to ``sequere:timeline:``.
+
 
 Resources
 ---------
