@@ -1,5 +1,3 @@
-from django.utils.module_loading import autodiscover_modules
-
 from .base import ModelBase
 
 
@@ -86,6 +84,8 @@ registry = SequereRegistry()
 
 
 def autodiscover():
+    from django.utils.module_loading import autodiscover_modules
+
     autodiscover_modules('sequere_registry')
 
 
