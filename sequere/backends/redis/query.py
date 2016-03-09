@@ -3,13 +3,12 @@ from collections import OrderedDict
 from sequere.query import QuerySetTransformer
 from sequere import utils
 
-from .connection import manager
-
 
 class RedisQuerySetTransformer(QuerySetTransformer):
-    def __init__(self, client, count, key):
-        super(RedisQuerySetTransformer, self).__init__(client, count)
+    def __init__(self, manager, count, key):
+        super(RedisQuerySetTransformer, self).__init__(manager.client, count)
 
+        self.manager = manager
         self.keys = [key, ]
         self.order_by(False)
 
@@ -38,7 +37,7 @@ class RedisQuerySetTransformer(QuerySetTransformer):
 
         scores = OrderedDict(scores)
 
-        objects = manager.get_from_uid_list(scores.keys())
+        objects = self.manager.get_from_uid_list(scores.keys())
 
         return [(objects[i], utils.from_timestamp(value[1]))
                 for i, value in enumerate(scores.items())]

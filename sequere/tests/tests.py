@@ -3,6 +3,8 @@ from .celery import app as celery_app  # noqa
 from django.test.utils import override_settings
 from django.test import TestCase
 from django.core.urlresolvers import reverse
+from django.conf import settings
+from django.utils.six.moves import reload_module
 
 from datetime import datetime, timedelta
 
@@ -11,12 +13,9 @@ from exam.cases import Exam
 
 from .models import Project
 
-from sequere import settings
 from sequere.registry import registry
 from sequere.http import json
 from sequere.backends.database.models import Follow
-
-import mock
 
 
 class FixturesMixin(Exam):
@@ -192,7 +191,7 @@ class BaseBackendTests(FixturesMixin):
         self.assertEqual(content['%s_followings_count' % identifier], 0)
 
 
-@mock.patch.object(settings, 'BACKEND', 'sequere.backends.database.DatabaseBackend')
+@override_settings(SEQUERE_BACKEND='sequere.backends.database.DatabaseBackend')
 class DatabaseBackendTests(BaseBackendTests, TestCase):
     def test_from_instance_and_to_instance(self):
         from ..models import follow
@@ -205,14 +204,20 @@ class DatabaseBackendTests(BaseBackendTests, TestCase):
         self.assertEqual(instance.from_instance, self.user)
 
 
-@mock.patch.object(settings, 'BACKEND', 'sequere.backends.redis.RedisBackend')
+@override_settings(SEQUERE_BACKEND='sequere.backends.redis.RedisBackend',
+                   SEQUERE_TIMELINE_IMPORT_ACTIONS_ON_FOLLOW=True,
+                   SEQUERE_TIMELINE_REMOVE_ACTIONS_ON_UNFOLLOW=True,
+                   INSTALLED_APPS=settings.INSTALLED_APPS + ['sequere.contrib.timeline', ],
+                   SEQUERE_TIMELINE_BACKEND='sequere.contrib.timeline.backends.redis.RedisBackend')
 class TimelineTests(FixturesMixin, TestCase):
     def setUp(self):
         super(TimelineTests, self).setUp()
 
-        from sequere.backends.backend import backend
+        from sequere.backends import backend
 
-        backend.clear()
+        reload_module(backend)
+
+        backend.backend.clear()
 
     def test_simple_timeline(self):
         from .sequere_registry import JoinAction, User
@@ -338,6 +343,10 @@ class TimelineTests(FixturesMixin, TestCase):
         self.assertEqual(timeline.get_unread_count(), 0)
 
 
-@override_settings(SEQUERE_BACKEND='sequere.backends.redis.RedisBackend', TIMELINE_CONNECTION='redis://redis:6379/0')
+@override_settings(SEQUERE_BACKEND='sequere.backends.redis.RedisBackend',
+                   SEQUERE_TIMELINE_IMPORT_ACTIONS_ON_FOLLOW=True,
+                   SEQUERE_TIMELINE_REMOVE_ACTIONS_ON_UNFOLLOW=True,
+                   INSTALLED_APPS=settings.INSTALLED_APPS + ['sequere.contrib.timeline', ],
+                   SEQUERE_TIMELINE_BACKEND='sequere.contrib.timeline.backends.redis.RedisBackend')
 class RedisUrlTimelineTests(TimelineTests):
     pass

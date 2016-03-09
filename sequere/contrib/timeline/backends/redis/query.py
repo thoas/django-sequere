@@ -2,15 +2,17 @@ from sequere.query import QuerySetTransformer
 
 from sequere.backends.redis.utils import get_key
 
-from sequere.contrib.timeline.action import Action
 from sequere.contrib.timeline.exceptions import ActionInvalid
 from sequere.contrib.timeline.utils import logger
 
 
 class TimelineQuerySetTransformer(QuerySetTransformer):
-    def __init__(self, client, count, key, prefix=None):
+    def __init__(self, backend, count, key, prefix=None):
+        client = backend.client
+
         super(TimelineQuerySetTransformer, self).__init__(client, count)
 
+        self.backend = backend
         self.keys = [key, ]
         self.order_by(False)
         self.prefix = prefix or ''
@@ -59,7 +61,7 @@ class RedisTimelineQuerySetTransformer(TimelineQuerySetTransformer):
                     continue
 
                 try:
-                    action = Action.from_data(data)
+                    action = self.backend.get_action(data)
                 except ActionInvalid as e:
                     logger.exception(e)
                 else:

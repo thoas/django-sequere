@@ -1,5 +1,3 @@
-import django
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -24,16 +22,12 @@ INSTALLED_APPS = [
     'sequere.backends.redis',
     'sequere.tests',
     'sequere.contrib.user',
-    'sequere.contrib.timeline',
     'sequere',
 ]
 
 SECRET_KEY = 'blabla'
 
 ROOT_URLCONF = 'sequere.tests.urls'
-
-if django.VERSION <= (1, 6):
-    TEST_RUNNER = 'discover_runner.DiscoverRunner'
 
 BROKER_BACKEND = 'memory'
 

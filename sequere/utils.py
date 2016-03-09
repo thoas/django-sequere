@@ -4,6 +4,8 @@ from datetime import datetime
 import six
 import time
 
+from . import defaults
+
 
 try:
     from importlib import import_module
@@ -110,3 +112,10 @@ def get_client(connection, connection_class=None):
             client = redis.StrictRedis(**connection)
 
     return client
+
+
+def get_setting(name):
+    try:
+        return getattr(settings, 'SEQUERE_' + name)
+    except AttributeError:
+        return getattr(defaults, name)

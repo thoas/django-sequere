@@ -1,5 +1,4 @@
-from sequere import settings
-from sequere.utils import load_class
+from sequere.utils import load_class, get_setting
 
 
-backend = load_class(settings.BACKEND_CLASS)(**settings.BACKEND_OPTIONS)
+backend = load_class(get_setting('TIMELINE_BACKEND'))(**get_setting('TIMELINE_BACKEND_OPTIONS'))

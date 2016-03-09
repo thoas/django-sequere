@@ -27,10 +27,10 @@ class RedisBackend(object):
 
         self.storage = Manager(self.client, prefix=kwargs['prefix'])
 
-    def _make_key(self, name, action=None, target=None):
+    def _make_key(self, instance, name, action=None, target=None):
         segments = [
             self.storage.add_prefix('uid'),
-            backend.manager.make_uid(self.instance),
+            backend.get_uid(instance),
             name,
         ]
 
@@ -52,19 +52,19 @@ class RedisBackend(object):
 
         return key
 
-    def _get_keys(self, action):
-        identifier = registry.get_identifier(self.instance)
+    def _get_keys(self, instance, action):
+        identifier = registry.get_identifier(instance)
 
         prefix = self.storage.add_prefix('uid')
 
-        uid = backend.manager.make_uid(self.instance)
+        uid = backend.get_uid(instance)
 
         keys = [
             get_key(prefix, uid, 'private'),
             get_key(prefix, uid, 'private', 'target', identifier)
         ]
 
-        if action.actor == self.instance:
+        if action.actor == instance:
             keys.append(get_key(prefix, uid, 'public'))
             keys.append(get_key(prefix, uid, 'public', 'target', identifier))
 
@@ -73,13 +73,14 @@ class RedisBackend(object):
 
             keys.append(get_key(prefix, uid, 'private', 'target', identifier))
 
-            if action.actor == self.instance:
+            if action.actor == instance:
                 keys.append(get_key(prefix, uid, 'public', 'target', identifier))
 
         return keys
 
-    def get_action(self, uid):
-        data = self.storage.get_data_from_uid(uid)
+    def get_action(self, data):
+        if isinstance(data, six.string_types + (int, )):
+            return self.get_action(self.storage.get_data_from_uid(data))
 
         verb = data['verb']
 
@@ -92,7 +93,7 @@ class RedisBackend(object):
 
         for attr_name in ('actor', 'target', ):
             if data.get(attr_name, None):
-                result = backend.manager.get_from_uid(data[attr_name])
+                result = backend.get_from_uid(data[attr_name])
 
                 if result is None:
                     raise ActionInvalid(data=data)
@@ -101,31 +102,37 @@ class RedisBackend(object):
             else:
                 data[attr_name] = None
 
-        data['date'] = from_timestamp(float(data.pop('timestamp')))
+        timestamp = float(data.pop('timestamp'))
+
+        data['date'] = from_timestamp(timestamp)
+        data['timestamp'] = timestamp
 
         return action_class(**data)
 
     def _save(self, action):
         result = {
-            'actor': backend.manage.make_uid(action.actor),
+            'actor': backend.get_uid(action.actor),
             'verb': action.verb,
         }
 
-        result['timestamp'] = to_timestamp(action.date)
+        timestamp = to_timestamp(action.date)
+
+        result['timestamp'] = timestamp
 
         if action.target:
-            result['target'] = backend.manager.make_uid(action.target)
+            result['target'] = backend.get_uid(action.target)
 
         uid = self.storage.make_uid(result)
 
         action.uid = uid
+        action.timestamp = timestamp
 
-    def save(self, action):
+    def save(self, instance, action):
         if action.uid is None:
             self._save(action)
 
         with self.client.pipeline() as pipe:
-            for key in self._get_keys(action):
+            for key in self._get_keys(instance, action):
                 pipe.incr(get_key(key, 'count'))
                 pipe.incr(get_key(key, 'verb', action.verb, 'count'))
 
@@ -139,9 +146,9 @@ class RedisBackend(object):
 
             pipe.execute()
 
-    def delete(self, action):
+    def delete(self, instance, action):
         with self.client.pipeline() as pipe:
-            for key in self._get_keys(action):
+            for key in self._get_keys(instance, action):
                 pipe.decr(get_key(key, 'count'))
                 pipe.decr(get_key(key, 'verb', action.verb, 'count'))
 
@@ -150,8 +157,8 @@ class RedisBackend(object):
 
             pipe.execute()
 
-    def get_count(self, name, action=None, target=None):
-        key = get_key(self._make_key(name, action=action, target=target), 'count')
+    def get_count(self, instance, name, action=None, target=None):
+        key = get_key(self._make_key(instance, name, action=action, target=target), 'count')
 
         result = self.client.get(key)
 
@@ -160,55 +167,55 @@ class RedisBackend(object):
 
         return 0
 
-    def get_read_key(self):
+    def get_read_key(self, instance):
         segments = [
             self.storage.add_prefix('uid'),
-            backend.manager.make_uid(self.instance),
+            backend.get_uid(instance),
             'read_at'
         ]
 
         return get_key(*segments)
 
-    def mark_as_read(self, timestamp):
-        self.client.set(self._get_read_key(), to_timestamp(timestamp))
+    def mark_as_read(self, instance, timestamp):
+        self.client.set(self.get_read_key(instance), to_timestamp(timestamp))
 
-    def get_read_at(self):
-        result = self.client.get(self._get_read_key())
+    def get_read_at(self, instance):
+        result = self.client.get(self.get_read_key(instance))
 
         if result:
             return from_timestamp(float(result))
 
         return None
 
-    def get_unread_count(self, read_at, action=None, target=None):
+    def get_unread_count(self, instance, read_at, action=None, target=None):
         if read_at:
             read_at = to_timestamp(read_at)
 
-        key = self._make_key('private', action=action, target=target)
+        key = self._make_key(instance, 'private', action=action, target=target)
 
         return self.client.zcount(key, read_at, to_timestamp(datetime.now()))
 
-    def get_private(self, action=None, target=None, desc=True):
-        key = self._make_key('private', action=action, target=target)
+    def get_private(self, instance, action=None, target=None, desc=True):
+        key = self._make_key(instance, 'private', action=action, target=target)
 
-        return self.retrieve_instances(key, self.get_private_count(action=action, target=target), desc=desc)
+        return self.retrieve_instances(key, self.get_private_count(instance, action=action, target=target), desc=desc)
 
-    def get_public(self, action=None, target=None, desc=True):
-        key = self._make_key('public', action=action, target=target)
+    def get_public(self, instance, action=None, target=None, desc=True):
+        key = self._make_key(instance, 'public', action=action, target=target)
 
-        return self.retrieve_instances(key, self.get_public_count(action=action, target=target), desc=desc)
+        return self.retrieve_instances(key, self.get_public_count(instance, action=action, target=target), desc=desc)
 
-    def get_private_count(self, action=None, target=None):
-        return self._get_count('private', action=action, target=target)
+    def get_private_count(self, instance, action=None, target=None):
+        return self.get_count(instance, 'private', action=action, target=target)
 
-    def get_public_count(self, action=None, target=None, desc=True):
-        return self._get_count('public', action=action, target=target)
+    def get_public_count(self, instance, action=None, target=None, desc=True):
+        return self.get_count(instance, 'public', action=action, target=target)
 
     def retrieve_instances(self, key, count, desc):
-        transformer = self.backend.queryset_class(self.backend,
-                                                  count,
-                                                  key=key,
-                                                  prefix=self.storage.prefix)
+        transformer = self.queryset_class(self,
+                                          count,
+                                          key=key,
+                                          prefix=self.storage.prefix)
         transformer.order_by(desc)
 
         return transformer

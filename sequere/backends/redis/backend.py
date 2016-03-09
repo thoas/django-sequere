@@ -7,9 +7,8 @@ import logging
 from sequere.backends.base import BaseBackend
 from sequere.registry import registry
 from sequere.exceptions import AlreadyFollowingException, NotFollowingException, SequereException
-from sequere.settings import FAIL_SILENTLY
 from sequere import signals
-from sequere.utils import get_client
+from sequere.utils import get_client, get_setting
 
 from .managers import InstanceManager
 from .utils import get_key
@@ -17,6 +16,8 @@ from .utils import get_key
 from .query import RedisQuerySetTransformer
 
 logger = logging.getLogger('sequere')
+
+FAIL_SILENTLY = get_setting('FAIL_SILENTLY')
 
 
 class RedisBackend(BaseBackend):
@@ -29,6 +30,12 @@ class RedisBackend(BaseBackend):
         self.client = get_client(kwargs['options'], connection_class=kwargs['client_class'])
 
         self.manager = InstanceManager(self.client, prefix=kwargs['prefix'])
+
+    def get_uid(self, instance):
+        return self.manager.make_uid(instance)
+
+    def get_from_uid(self, uid):
+        return self.manager.get_from_uid(uid)
 
     def follow(self, from_instance, to_instance, timestamp=None,
                fail_silently=FAIL_SILENTLY,
@@ -160,7 +167,7 @@ class RedisBackend(BaseBackend):
                                     to_instance=to_instance)
 
     def retrieve_instances(self, key, count, desc):
-        transformer = RedisQuerySetTransformer(self.client, count, key=key)
+        transformer = RedisQuerySetTransformer(self.manager, count, key=key)
         transformer.order_by(desc)
 
         return transformer

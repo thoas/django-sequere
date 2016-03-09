@@ -82,36 +82,6 @@ class SequereRegistry(dict):
         self[sequere.__name__] = sequere
 
 
-def _autodiscover(registry):
-    import copy
-
-    from django.conf import settings
-    from django.utils.module_loading import module_has_submodule
-
-    try:
-        from importlib import import_module
-    except ImportError:
-        from django.utils.importlib import import_module  # noqa
-
-    for app in settings.INSTALLED_APPS:
-        mod = import_module(app)
-        # Attempt to import the app's admin module.
-        try:
-            before_import_registry = copy.copy(registry)
-            import_module('%s.sequere_registry' % app)
-        except:
-            # Reset the model registry to the state before the last import as
-            # this import will have to reoccur on the next request and this
-            # could raise NotRegistered and AlreadyRegistered exceptions
-            # (see #8245).
-            registry = before_import_registry
-
-            # Decide whether to bubble up this error. If the app just
-            # doesn't have an admin module, we can ignore the error
-            # attempting to import it, otherwise we want it to bubble up.
-            if module_has_submodule(mod, 'sequere_registry'):
-                raise
-
 registry = SequereRegistry()
 
 

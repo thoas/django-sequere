@@ -6,8 +6,7 @@ from celery.task import task
 
 
 @task
-def dispatch_action(uid, action_uid, dispatch=True):
-    from sequere.backends.redis.connection import manager
+def dispatch_action(action_uid, dispatch=True):
     from sequere.models import get_followers
     from sequere.contrib.timeline.backends.backend import backend
 
@@ -15,36 +14,31 @@ def dispatch_action(uid, action_uid, dispatch=True):
 
     logger = dispatch_action.get_logger()
 
-    instance = manager.get_from_uid(uid)
+    action = backend.get_action(action_uid)
 
-    if not instance:
-        logger.error('No instance found for uid: %s' % uid)
-    else:
-        action = backend.get_action(action_uid)
+    paginator = Paginator(get_followers(action.actor), 10)
 
-        paginator = Paginator(get_followers(instance), 10)
+    logger.info('Dispatch action %s to %s followers' % (action, paginator.count))
 
-        logger.info('Dispatch action %s to %s followers' % (action, paginator.count))
+    for num_page in paginator.page_range:
+        page = paginator.page(num_page)
 
-        for num_page in paginator.page_range:
-            page = paginator.page(num_page)
+        for obj, timestamp in page.object_list:
+            if action.actor == obj:
+                continue
 
-            for obj, timestamp in page.object_list:
-                if action.actor == obj:
-                    continue
-
-                timeline = Timeline(obj)
-                timeline.save(action, dispatch=dispatch)
+            timeline = Timeline(obj)
+            timeline.save(action, dispatch=dispatch)
 
 
 def populate_actions(from_uid, to_uid, method, logger=None):
-    from sequere.backends.redis.connection import manager
+    from sequere.backends.backend import backend
 
     from . import Timeline
 
-    from_instance = manager.get_from_uid(from_uid)
+    from_instance = backend.get_from_uid(from_uid)
 
-    to_instance = manager.get_from_uid(to_uid)
+    to_instance = backend.get_from_uid(to_uid)
 
     paginator = Paginator(Timeline(from_instance).get_public(), 10)
 
