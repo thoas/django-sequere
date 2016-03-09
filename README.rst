@@ -386,91 +386,34 @@ to query actions for a specific target.
 Configuration
 -------------
 
-``SEQUERE_BACKEND_CLASS``
-.........................
+``SEQUERE_BACKEND``
+...................
 
 The backend used to store follows
 
 Defaults to ``sequere.backends.database.DatabaseBackend``.
 
-``SEQUERE_REDIS_CONNECTION``
+``SEQUERE_BACKEND_OPTIONS``
 ............................
 
-A dictionary of parameters to pass to the to Redis client, e.g.:
+A dictionary of parameters to pass to the backend, for example with redis:
 
 .. code-block:: python
 
-    SEQUERE_REDIS_CONNECTION = {
-        'host': 'localhost',
-        'port': 6379,
-        'db': 0,
+    SEQUERE_BACKEND = 'sequere.backends.redis.RedisBackend'
+    SEQUERE_BACKEND_OPTIONS = {
+        'client_class': 'myproject.myapp.mockup.Connection',
+        'options': {
+            'host': 'localhost',
+            'port': 6379,
+            'db': 0,
+        },
+        'prefix': 'prefix-used:'
     }
 
-Alternatively you can use a URL to do the same:
-
-.. code-block:: python
-
-    SEQUERE_REDIS_CONNECTION = 'redis://username:password@localhost:6379/0'
-
-
-``SEQUERE_REDIS_CONNECTION_CLASS``
-..................................
-
-An (optional) dotted import path to a connection to use, e.g.:
-
-.. code-block:: python
-
-    SEQUERE_REDIS_CONNECTION_CLASS = 'myproject.myapp.mockup.Connection'
-
-``SEQUERE_REDIS_PREFIX``
-........................
-
 The (optional) prefix to be used for the key when storing in the Redis database.
-
-.. code-block:: python
-
-    SEQUERE_REDIS_PREFIX = 'sequere:myproject:'
 
 Defaults to ``sequere:``.
-
-``SEQUERE_TIMELINE_CONNECTION_CLASS``
-.....................................
-
-An (optional) dotted import path to a connection to use, e.g.:
-
-.. code-block:: python
-
-    SEQUERE_TIMELINE_CONNECTION_CLASS = 'myproject.myapp.mockup.Connection'
-
-``SEQUERE_TIMELINE_REDIS_CONNECTION``
-.....................................
-
-A dictionary of parameters to pass to the to Redis client, e.g.:
-
-.. code-block:: python
-
-    SEQUERE_TIMELINE_REDIS_CONNECTION = {
-        'host': 'localhost',
-        'port': 6379,
-        'db': 0,
-    }
-
-Alternatively you can use a URL to do the same:
-
-.. code-block:: python
-
-    SEQUERE_TIMELINE_REDIS_CONNECTION = 'redis://username:password@localhost:6379/0'
-
-``SEQUERE_TIMELINE_REDIS_PREFIX``
-.................................
-
-The (optional) prefix to be used for the key when storing in the Redis database.
-
-.. code-block:: python
-
-    SEQUERE_TIMELINE_REDIS_PREFIX = 'sequere:myproject:timeline'
-
-Defaults to ``sequere:timeline``.
 
 
 Resources

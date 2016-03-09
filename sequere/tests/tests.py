@@ -4,7 +4,6 @@ from django.test.utils import override_settings
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.conf import settings
-from django.utils.six.moves import reload_module
 
 from datetime import datetime, timedelta
 
@@ -215,8 +214,7 @@ class TimelineTests(FixturesMixin, TestCase):
 
         from sequere.backends import backend
 
-        reload_module(backend)
-
+        backend.backend = backend.get_backend()
         backend.backend.clear()
 
     def test_simple_timeline(self):

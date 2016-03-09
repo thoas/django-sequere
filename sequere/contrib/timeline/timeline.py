@@ -47,7 +47,7 @@ class Timeline(object):
                                     instance=self.instance,
                                     action=action)
 
-        self.delete(self.instance, action)
+        self.backend.delete(self.instance, action)
 
         if dispatch:
             signals.post_delete.send(sender=origin,
