@@ -6,4 +6,5 @@ test:
 	coverage report --omit=sequere/test*
 
 release:
-	python setup.py sdist register upload -s
+	python setup.py register
+	python setup.py sdist upload
